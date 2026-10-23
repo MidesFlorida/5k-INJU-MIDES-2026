@@ -10,9 +10,51 @@
 header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;padding:20px clamp(16px,4vw,42px);box-shadow:0 4px 18px #092f5630}
 .top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.eyebrow{font-size:.75rem;letter-spacing:.13em;font-weight:800;opacity:.8}.title{margin:4px 0;font-size:clamp(1.35rem,3vw,2rem);line-height:1.15}.sub{margin:5px 0 0;color:#d9eaff}.actions{display:flex;gap:8px;flex-wrap:wrap}a.btn,button{border:0;border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer;text-decoration:none}a.btn{background:white;color:var(--navy)}.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:14px;padding:14px;min-height:calc(100vh - 120px)}aside,.mapbox{background:white;border:1px solid #dbe4ee;border-radius:15px;overflow:hidden;box-shadow:0 5px 18px #14375a0a}.panelhead{padding:17px;border-bottom:1px solid #e6edf4}.panelhead h2{margin:0;font-size:1rem}.panelhead p{margin:6px 0 0;color:var(--muted);font-size:.88rem}.status{display:inline-flex;background:#e7f6ee;color:#17683d;border-radius:30px;padding:5px 9px;font-size:.75rem;font-weight:800;margin-bottom:8px}.layers{padding:10px}.layer{display:flex;align-items:center;gap:10px;padding:11px 9px;border-radius:9px;border-bottom:1px solid #edf1f6}.layer:last-child{border:0}.swatch{width:12px;height:12px;border-radius:4px;flex:none}.layer label{flex:1;font-weight:650;cursor:pointer}.layer input{accent-color:var(--blue);width:17px;height:17px}.legend{padding:14px 17px;border-top:1px solid #e6edf4;color:var(--muted);font-size:.84rem}.legend b{color:var(--ink)}.maphead{padding:12px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e6edf4;flex-wrap:wrap}.maphead strong{font-size:.92rem}.maphead span{font-size:.8rem;color:var(--muted)}#map{height:calc(100vh - 195px);min-height:430px;width:100%}.leaflet-popup-content-wrapper{border-radius:12px}.popup-title{font-weight:850;color:#073568;font-size:1rem;margin-bottom:5px}.popup-type{display:inline-block;background:#eaf3ff;color:#0756a4;border-radius:20px;padding:3px 7px;font-size:.72rem;font-weight:800;margin-bottom:7px}.empty{padding:18px;color:var(--muted);font-size:.9rem}.signup-wrap{padding:14px 14px 0}.signup-card{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:#fff;border:1px solid #dbe4ee;border-left:5px solid #008e38;border-radius:15px;padding:18px 22px;box-shadow:0 5px 18px #14375a0a}.signup-copy{display:flex;align-items:center;gap:14px;flex:1;min-width:220px}.signup-icon{width:48px;height:48px;border-radius:12px;background:#e7f6ee;color:#08612c;display:flex;align-items:center;justify-content:center;font-size:1.55rem;flex:none}.signup-card h2{margin:0 0 4px;font-size:1.08rem;color:var(--navy)}.signup-card p{margin:0;color:var(--muted);font-size:.9rem}.signup-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#08612c;color:#fff;border-radius:10px;padding:12px 18px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 3px 8px #08612c20}.signup-btn:hover{background:#064d23}.signup-note{font-size:.75rem;color:var(--muted);margin-top:7px}.signup-btn:focus-visible{outline:3px solid #ffe100;outline-offset:3px}footer{padding:10px 18px;color:var(--muted);font-size:.8rem;text-align:center}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.layers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.layer{border:0;background:#f7f9fc;margin:3px}.legend{display:none}#map{height:65vh;min-height:420px}}@media(max-width:480px){.layers{grid-template-columns:1fr}.layout{padding:8px;gap:8px}header{padding:17px 15px}.signup-wrap{padding:10px 8px 0}.signup-card{padding:15px;gap:14px}.signup-copy{min-width:0;align-items:flex-start}.signup-icon{width:42px;height:42px}.signup-btn{width:100%}}
+
+/* Bienvenida animada 5K INJU–MIDES */
+#intro-5k{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 35%,#1264b6 0%,#073568 55%,#031c3b 100%);color:#fff;opacity:1;visibility:visible;transition:opacity .65s ease,visibility .65s ease}
+#intro-5k.intro-out{opacity:0;visibility:hidden;pointer-events:none}
+.intro-inner{width:min(720px,100%);text-align:center;animation:intro-rise .85s cubic-bezier(.2,.8,.2,1) both}
+.intro-kicker{font-size:.76rem;font-weight:850;letter-spacing:.22em;text-transform:uppercase;color:#bfe8ff;margin-bottom:22px;animation:intro-rise .7s .1s both}
+.intro-logos{display:flex;align-items:center;justify-content:center;gap:clamp(18px,5vw,44px);margin:0 auto 27px}
+.intro-logo-card{width:clamp(125px,28vw,205px);height:clamp(125px,28vw,205px);padding:15px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 45px #00132b55;animation:intro-pop .85s .15s both}
+.intro-logo-card img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.intro-mides-mark{width:100%;color:#0756a4;text-align:left;line-height:1}
+.intro-mides-mark .mides-word{font-weight:950;font-size:clamp(1.8rem,5vw,2.7rem);letter-spacing:-.07em}
+.intro-mides-mark .mides-line{height:7px;width:100%;margin:12px 0 9px;background:linear-gradient(90deg,#0756a4 0 66%,#e63946 66% 83%,#f5c542 83%)}
+.intro-mides-mark .mides-caption{font-size:.67rem;letter-spacing:.12em;font-weight:800;line-height:1.4}
+.intro-plus{font-size:1.6rem;font-weight:300;color:#bfe8ff;animation:intro-pulse 1.5s ease-in-out infinite}
+.intro-title{font-size:clamp(1.65rem,5vw,2.7rem);line-height:1.05;margin:0;font-weight:950;letter-spacing:-.04em;text-shadow:0 3px 18px #001b3c66}
+.intro-slogan{font-size:clamp(.95rem,2.5vw,1.15rem);margin:12px 0 25px;color:#d9edff;font-weight:650}
+.intro-progress{width:min(260px,70%);height:4px;margin:auto;border-radius:9px;background:#ffffff35;overflow:hidden}
+.intro-progress span{display:block;width:100%;height:100%;background:#fff;transform-origin:left;animation:intro-progress 3.6s linear both}
+.intro-foot{margin-top:14px;font-size:.75rem;letter-spacing:.08em;color:#b9d7f3}
+@keyframes intro-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes intro-pop{from{opacity:0;transform:scale(.82) rotate(-3deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes intro-pulse{0%,100%{opacity:.55;transform:scale(.9)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes intro-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(max-width:430px){.intro-logos{gap:12px}.intro-logo-card{border-radius:18px;padding:10px}.intro-plus{font-size:1.15rem}.intro-kicker{letter-spacing:.12em}}
+@media(prefers-reduced-motion:reduce){#intro-5k,.intro-inner,.intro-kicker,.intro-logo-card,.intro-plus,.intro-progress span{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
+
+<div id="intro-5k" role="status" aria-label="Bienvenida a la 5K INJU MIDES Florida">
+ <div class="intro-inner">
+  <div class="intro-kicker">Intendencia · Juventud · Comunidad</div>
+  <div class="intro-logos">
+   <div class="intro-logo-card"><img src="LOGO_5k_florida-2026.png" alt="Logo oficial 5K Florida 2026" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=&quot;color:#0756a4;text-align:center;font-weight:950;line-height:1.05&quot;><div style=&quot;font-size:2.5rem&quot;>5K</div><div style=&quot;font-size:.8rem;margin-top:8px&quot;>INJU · MIDES<br>FLORIDA 2026</div></div>'"></div>
+   <div class="intro-plus" aria-hidden="true">✦</div>
+   <div class="intro-logo-card"><div class="intro-mides-mark" role="img" aria-label="MIDES Uruguay"><div class="mides-word">MIDES</div><div class="mides-line"></div><div class="mides-caption">MINISTERIO DE<br>DESARROLLO SOCIAL</div></div></div>
+  </div>
+  <h1 class="intro-title">5K INJU–MIDES Florida</h1>
+  <p class="intro-slogan">La violencia no corre más</p>
+  <div class="intro-progress" aria-hidden="true"><span></span></div>
+  <div class="intro-foot">PREPARANDO EL MAPA PÚBLICO</div>
+ </div>
+</div>
+
 <header><div class="top"><div><div class="eyebrow">MIDES FLORIDA · INJU</div><h1 class="title">5K · La violencia no corre más</h1><p class="sub">Mapa público del evento · Florida, Uruguay</p></div><div class="actions"><a class="btn" href="editor.html">Acceso al diseño</a></div></div></header>
 <section class="signup-wrap" aria-labelledby="signup-title"><div class="signup-card"><div class="signup-copy"><div class="signup-icon" aria-hidden="true">🏃</div><div><h2 id="signup-title">¡Sumate a la 5K!</h2><p>Inscribite en línea y sé parte de la iniciativa <strong>La violencia no corre más</strong>.</p><div class="signup-note">Formulario oficial de inscripción · MIDES</div></div></div><a class="signup-btn" href="https://formularios.mides.gub.uy/228484/" target="_blank" rel="noopener noreferrer">Inscribirme ahora <span aria-hidden="true">↗</span></a></div></section>
 <main class="layout"><aside><div class="panelhead"><span class="status">● INFORMACIÓN PÚBLICA</span><h2>Referencias del evento</h2><p>Activá o desactivá las capas para consultar el recorrido, el escenario, los puestos y las áreas de la feria social. Tocá cada elemento del mapa para ver su descripción.</p></div><div id="layers" class="layers"><div class="empty">Cargando información del mapa…</div></div><div class="legend"><b>Cómo usar el mapa</b><br>Acercá o alej á el mapa con los controles o los gestos de tu dispositivo. Seleccioná una línea, un marcador o un área para ver los detalles.</div></aside><section class="mapbox"><div class="maphead"><strong>Mapa interactivo del evento</strong><span id="status">Conectando con la información del evento…</span></div><div id="map" role="application" aria-label="Mapa interactivo del evento 5K"></div></section></main><footer>5K INJU–MIDES Florida · Viernes 30 de octubre de 2026 · Plaza Artigas</footer>
@@ -41,4 +83,12 @@ function load(){if(!API_URL){render([]);document.getElementById('status').textCo
  const cb='midesMapCb'+Date.now();window[cb]=res=>{try{if(!res||!res.ok)throw Error('Respuesta no válida');render(res.items||[]);document.getElementById('status').textContent='Información actualizada'}catch(e){document.getElementById('status').textContent='No se pudo leer la información'}finally{delete window[cb];script.remove()}};
  const script=document.createElement('script');script.src=API_URL+'?action=mapa5kList&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
 load();setInterval(load,60000);
+</script>
+<script>
+(function(){
+ const intro=document.getElementById('intro-5k');
+ if(!intro)return;
+ const showFor=4000;
+ window.setTimeout(function(){intro.classList.add('intro-out');window.setTimeout(function(){if(intro.parentNode)intro.parentNode.removeChild(intro);},700);},showFor);
+})();
 </script></body></html>
