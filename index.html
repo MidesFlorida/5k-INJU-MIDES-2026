@@ -25,12 +25,12 @@ const definitions={ruta:{label:'Recorrido de la 5K',color:'#e53935'},escenario:{
 const layerItems=[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function popupHtml(o){return '<div class="popup-type">'+esc(definitions[o.tipo]?.label||'Punto de interés')+'</div><div class="popup-title">'+esc(o.nombre||'Sin título')+'</div>'+(o.descripcion?'<div>'+esc(o.descripcion).replace(/\n/g,'<br>')+'</div>':'')+(o.horario?'<p><b>Horario:</b> '+esc(o.horario)+'</p>':'')+(o.detalles?'<p>'+esc(o.detalles)+'</p>':'')}
-function render(items){Object.values(groups).forEach(g=>g.clearLayers());document.getElementById('layers').innerHTML='';layerItems.length=0;
+function render(items){items=(items||[]).filter(o=>o.visible!==false);Object.values(groups).forEach(g=>g.clearLayers());document.getElementById('layers').innerHTML='';layerItems.length=0;
  const bounds=[];
  items.forEach((o,i)=>{const g=groups[o.tipo]||groups.otros;let feature=null;
  if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){feature=L.polyline(o.puntos.map(p=>[+p.lat,+p.lng]),{color:o.color||definitions[o.tipo]?.color||'#0756a4',weight:5,opacity:.9});o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]))}
  else if(o.geometria==='poligono'&&Array.isArray(o.puntos)&&o.puntos.length>2){feature=L.polygon(o.puntos.map(p=>[+p.lat,+p.lng]),{color:o.color||definitions[o.tipo]?.color||'#16834a',weight:2,fillColor:o.color||definitions[o.tipo]?.color||'#16834a',fillOpacity:.2});o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]))}
- else if(o.lat!=null&&o.lng!=null){feature=L.marker([+o.lat,+o.lng]);bounds.push([+o.lat,+o.lng])}
+ else if(Array.isArray(o.puntos)&&o.puntos.length){feature=L.marker([+o.puntos[0].lat,+o.puntos[0].lng]);bounds.push([+o.puntos[0].lat,+o.puntos[0].lng])}
  if(feature){feature.bindPopup(popupHtml(o));feature.addTo(g)}
  });
  Object.entries(definitions).forEach(([key,d])=>{const row=document.createElement('div');row.className='layer';row.innerHTML='<span class="swatch" style="background:'+d.color+'"></span><label for="layer-'+key+'">'+d.label+'</label><input id="layer-'+key+'" type="checkbox" checked>';const cb=row.querySelector('input');cb.addEventListener('change',()=>cb.checked?map.addLayer(groups[key]):map.removeLayer(groups[key]));document.getElementById('layers').appendChild(row)});
