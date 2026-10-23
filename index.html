@@ -38,6 +38,6 @@ function render(items){items=(items||[]).filter(o=>o.visible!==false);Object.val
 }
 function load(){if(!API_URL){render([]);document.getElementById('status').textContent='Mapa base listo · falta conectar Google Sheets';return}
  const cb='midesMapCb'+Date.now();window[cb]=res=>{try{if(!res||!res.ok)throw Error('Respuesta no válida');render(res.items||[]);document.getElementById('status').textContent='Información actualizada'}catch(e){document.getElementById('status').textContent='No se pudo leer la información'}finally{delete window[cb];script.remove()}};
- const script=document.createElement('script');script.src=API_URL+'?action=list&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
+ const script=document.createElement('script');script.src=API_URL+'?action=mapa5kList&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
 load();setInterval(load,60000);
 </script></body></html>
