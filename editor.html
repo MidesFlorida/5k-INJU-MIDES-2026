@@ -32,12 +32,34 @@ function popup(o){return '<b>'+esc(o.nombre)+'</b><br>'+esc(o.descripcion||'')+(
 function drawRecord(o){if(o.visible===false)return;let layer;const pts=(o.puntos||[]).map(p=>[+p.lat,+p.lng]);if(o.geometria==='ruta'&&pts.length>1)layer=L.polyline(pts,{color:o.color||'#0756a4',weight:5});else if(o.geometria==='poligono'&&pts.length>2)layer=L.polygon(pts,{color:o.color||'#16834a',fillOpacity:.2});else if(pts.length)layer=L.marker(pts[0]);if(!layer)return;layer.bindPopup(popup(o));layer.on('click',()=>select(o.id));layer._recordId=o.id;drawn.addLayer(layer)}
 function render(){drawn.clearLayers();records.forEach(drawRecord);$('items').innerHTML='<b>Elementos del mapa ('+records.length+')</b>'+(records.length?records.map(o=>'<div class="item"><span>'+esc(o.nombre)+' '+(o.visible===false?'(oculto)':'')+'</span><button data-id="'+esc(o.id)+'" class="secondary">Editar</button></div>').join(''):'<p class="status">Todavía no hay elementos guardados.</p>');$('items').querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>select(b.dataset.id))}
 function select(id){const o=records.find(r=>r.id===id);if(!o)return;selectedId=id;$('nombre').value=o.nombre||'';$('tipo').value=o.tipo||'ruta';$('geometria').value=o.geometria||'ruta';$('descripcion').value=o.descripcion||'';$('horario').value=o.horario||'';$('detalles').value=o.detalles||'';$('color').value=o.color||'#0756a4';$('visible').value=String(o.visible!==false);say('Editando: '+o.nombre)}
-function startDraw(){const type=$('geometria').value;if(drawControl){map.removeControl(drawControl);drawControl=null}if(type==='ruta')pending=new L.Draw.Polyline(map,{shapeOptions:{color:$('color').value,weight:5}});else if(type==='poligono')pending=new L.Draw.Polygon(map,{shapeOptions:{color:$('color').value,fillOpacity:.2}});else pending=new L.Draw.Marker(map);pending.enable();say('Dibujá el elemento en el mapa. Al terminar, se asociará a los datos del formulario.')}
-map.on(L.Draw.Event.CREATED,e=>{if(pending)pending.disable();pending=null;const o=getForm();o.puntos=pointsFrom(e.layer);if(o.geometria==='punto')o.geometria='punto';const idx=records.findIndex(r=>r.id===o.id);if(idx>=0)records[idx]=o;else records.push(o);selectedId=o.id;render();say('Dibujo listo. Pulsá “Guardar elemento” para guardarlo en Google Sheets y publicarlo. Aún no se guardó.')});
+function startDraw(){const type=$('geometria').value;if(drawControl){map.removeControl(drawControl);drawControl=null}if(type==='ruta')pending=new L.Draw.Polyline(map,{shapeOptions:{color:$('color').value,weight:5},repeatMode:false});else if(type==='poligono')pending=new L.Draw.Polygon(map,{allowIntersection:false,showArea:true,shapeOptions:{color:$('color').value,fillOpacity:.25},repeatMode:false});else pending=new L.Draw.Marker(map);pending.enable();say('Dibujá el elemento en el mapa. Al terminar, se asociará a los datos del formulario.')}
+function persistRecord(o,successMessage){
+ if(!o||!o.nombre){say('El dibujo quedó pendiente: completá el nombre y pulsá Guardar elemento.');return}
+ if(!API_URL){say('No se pudo guardar: falta configurar la conexión con Google Sheets.');return}
+ say('Guardando automáticamente «'+o.nombre+'» en Google Sheets…');
+ const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[o]}));
+ jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado correctamente: '+o.nombre),'No se pudo guardar automáticamente. Revisá la clave de edición y la conexión.');
+}
+map.on(L.Draw.Event.CREATED,e=>{
+ if(pending)pending.disable();
+ pending=null;
+ const o=getForm();
+ o.puntos=pointsFrom(e.layer);
+ const idx=records.findIndex(r=>r.id===o.id);
+ if(idx>=0)records[idx]=o;else records.push(o);
+ selectedId=o.id;
+ render();
+ persistRecord(o,'✓ Dibujo cerrado y guardado en Google Sheets: '+o.nombre);
+});
 $('draw').onclick=()=>{if(!$('nombre').value.trim()){$('nombre').focus();say('Ingresá un nombre antes de dibujar.');return}startDraw()};
-$('cancel').onclick=()=>{if(pending)pending.disable();pending=null;say('Dibujo cancelado.')};
-$('clear').onclick=()=>{$('form').reset();$('color').value='#0756a4';selectedId=null;say('Formulario limpio. Completá los datos para crear un elemento.');};
-$('save').onclick=()=>{const f=getForm();const o=records.find(r=>r.id===f.id);if(!f.nombre){say('El nombre es obligatorio.');return}if(!o){say('Primero dibujá o seleccioná un elemento existente.');return}Object.assign(o,f);if(!API_URL){render();say('No guardado en la nube: falta configurar API_URL. Los cambios actuales solo están en esta sesión.');return}const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[o]}));jsonp(API_URL+'?action=mapa5kSave&data='+payload,'Elemento guardado en Google Sheets.','No se pudo guardar. Revisá la URL y la clave.');};
+$('cancel').onclick=()=>{if(pending)pending.disable();pending=null;say('Dibujo cancelado; no se guardó ningún cambio.')};
+$('clear').onclick=()=>{if(pending){pending.disable();pending=null}$('form').reset();$('color').value='#0756a4';selectedId=null;say('Formulario limpio. Completá los datos para crear un elemento.');};
+$('save').onclick=()=>{
+ const f=getForm();const o=records.find(r=>r.id===f.id);
+ if(!f.nombre){say('El nombre es obligatorio.');return}
+ if(!o){say('Primero dibujá o seleccioná un elemento existente.');return}
+ Object.assign(o,f);render();persistRecord(o,'✓ Cambios guardados en Google Sheets: '+o.nombre);
+};
 $('remove').onclick=()=>{if(!selectedId){say('Seleccioná un elemento de la lista primero.');return}if(!confirm('¿Ocultar este elemento del mapa público? El registro se conservará en Google Sheets.'))return;const o=records.find(r=>r.id===selectedId);if(!o)return;o.visible=false;render();if(!API_URL){say('Oculto solo en esta sesión.');return}jsonp(API_URL+'?action=mapa5kSave&data='+encodeURIComponent(JSON.stringify({key:adminKey,items:[o]})),'Elemento oculto; registro conservado.','No se pudo guardar el cambio.');};
 function jsonp(url,ok,fail){const cb='mapCb'+Date.now();window[cb]=res=>{delete window[cb];script.remove();if(res&&res.ok){if(url.indexOf('action=mapa5kList')!==-1){records=Array.isArray(res.items)?res.items:[];render()}say(ok);if(url.indexOf('action=mapa5kSave')!==-1)load()}else say(fail+(res&&res.error?' '+res.error:''))};const script=document.createElement('script');script.src=url+'&callback='+cb+'&t='+Date.now();script.onerror=()=>{delete window[cb];say(fail)};document.body.appendChild(script)}
 function load(){if(!API_URL){records=[];render();return}jsonp(API_URL+'?action=mapa5kList','Datos cargados.','No se pudo cargar el mapa.')}
