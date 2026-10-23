@@ -1,9 +1,13 @@
 /**
  * API del mapa 5K INJU–MIDES Florida.
- * Configurar en Configuración del proyecto > Propiedades del script:
- * SPREADSHEET_ID = ID de la hoja de cálculo de Google
+ * La pestaña Mapa5K se crea automáticamente en la hoja configurada.
+ * ID de la hoja base: 113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU
+ *
+ * Configurar en Propiedades del script:
  * ADMIN_KEY = clave larga de edición
+ * SPREADSHEET_ID es opcional; si existe, tiene prioridad sobre el ID predeterminado.
  */
+const DEFAULT_SPREADSHEET_ID = '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU';
 const SHEET_NAME = 'Mapa5K';
 const HEADERS = ['id','nombre','tipo','geometria','puntos_json','descripcion','horario','detalles','color','visible','actualizado'];
 
@@ -23,7 +27,7 @@ function doGet(e) {
       writeItems_(payload.items);
       result = { ok: true, count: payload.items.length, message: 'Guardado' };
     } else {
-      result = { ok: true, service: 'Mapa 5K INJU–MIDES Florida', apiVersion: '1.0' };
+      result = { ok: true, service: 'Mapa 5K INJU–MIDES Florida', apiVersion: '1.1' };
     }
   } catch (err) {
     result = { ok: false, error: String(err && err.message ? err.message : err) };
@@ -83,19 +87,20 @@ function writeItems_(items) {
 
 function getSheet_() {
   const props = PropertiesService.getScriptProperties();
-  const id = props.getProperty('SPREADSHEET_ID');
-  if (!id) throw new Error('Falta SPREADSHEET_ID en las propiedades del script.');
+  const id = props.getProperty('SPREADSHEET_ID') || DEFAULT_SPREADSHEET_ID;
   const ss = SpreadsheetApp.openById(id);
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    sheet.autoResizeColumns(1, HEADERS.length);
   }
   return sheet;
 }
 
-/** Ejecutar manualmente una vez desde Apps Script para autorizar acceso a Sheets. */
+/** Ejecutar manualmente una vez desde Apps Script para crear/preparar la pestaña Mapa5K. */
 function prepararHoja5K() {
   const sheet = getSheet_();
   Logger.log('Hoja lista: ' + sheet.getParent().getUrl() + ' (' + sheet.getName() + ')');
