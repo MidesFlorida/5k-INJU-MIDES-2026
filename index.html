@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa público | 5K INJU–MIDES Florida 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--blue:#0756a4;--navy:#073568;--cyan:#23a9e0;--bg:#eef3f8;--ink:#18283b;--muted:#63758a}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;padding:20px clamp(16px,4vw,42px);box-shadow:0 4px 18px #092f5630}
+.top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.eyebrow{font-size:.75rem;letter-spacing:.13em;font-weight:800;opacity:.8}.title{margin:4px 0;font-size:clamp(1.35rem,3vw,2rem);line-height:1.15}.sub{margin:5px 0 0;color:#d9eaff}.actions{display:flex;gap:8px;flex-wrap:wrap}a.btn,button{border:0;border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer;text-decoration:none}a.btn{background:white;color:var(--navy)}.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:14px;padding:14px;min-height:calc(100vh - 120px)}aside,.mapbox{background:white;border:1px solid #dbe4ee;border-radius:15px;overflow:hidden;box-shadow:0 5px 18px #14375a0a}.panelhead{padding:17px;border-bottom:1px solid #e6edf4}.panelhead h2{margin:0;font-size:1rem}.panelhead p{margin:6px 0 0;color:var(--muted);font-size:.88rem}.status{display:inline-flex;background:#e7f6ee;color:#17683d;border-radius:30px;padding:5px 9px;font-size:.75rem;font-weight:800;margin-bottom:8px}.layers{padding:10px}.layer{display:flex;align-items:center;gap:10px;padding:11px 9px;border-radius:9px;border-bottom:1px solid #edf1f6}.layer:last-child{border:0}.swatch{width:12px;height:12px;border-radius:4px;flex:none}.layer label{flex:1;font-weight:650;cursor:pointer}.layer input{accent-color:var(--blue);width:17px;height:17px}.legend{padding:14px 17px;border-top:1px solid #e6edf4;color:var(--muted);font-size:.84rem}.legend b{color:var(--ink)}.maphead{padding:12px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #e6edf4;flex-wrap:wrap}.maphead strong{font-size:.92rem}.maphead span{font-size:.8rem;color:var(--muted)}#map{height:calc(100vh - 195px);min-height:430px;width:100%}.leaflet-popup-content-wrapper{border-radius:12px}.popup-title{font-weight:850;color:#073568;font-size:1rem;margin-bottom:5px}.popup-type{display:inline-block;background:#eaf3ff;color:#0756a4;border-radius:20px;padding:3px 7px;font-size:.72rem;font-weight:800;margin-bottom:7px}.empty{padding:18px;color:var(--muted);font-size:.9rem}footer{padding:10px 18px;color:var(--muted);font-size:.8rem;text-align:center}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.layers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.layer{border:0;background:#f7f9fc;margin:3px}.legend{display:none}#map{height:65vh;min-height:420px}}@media(max-width:480px){.layers{grid-template-columns:1fr}.layout{padding:8px;gap:8px}header{padding:17px 15px}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><div class="eyebrow">MIDES FLORIDA · INJU</div><h1 class="title">5K · La violencia no corre más</h1><p class="sub">Mapa público del evento · Florida, Uruguay</p></div><div class="actions"><a class="btn" href="editor.html">Acceso al diseño</a></div></div></header>
+<main class="layout"><aside><div class="panelhead"><span class="status">● INFORMACIÓN PÚBLICA</span><h2>Referencias del evento</h2><p>Activá o desactivá las capas para consultar el recorrido, el escenario, los puestos y las áreas de la feria social. Tocá cada elemento del mapa para ver su descripción.</p></div><div id="layers" class="layers"><div class="empty">Cargando información del mapa…</div></div><div class="legend"><b>Cómo usar el mapa</b><br>Acercá o alej á el mapa con los controles o los gestos de tu dispositivo. Seleccioná una línea, un marcador o un área para ver los detalles.</div></aside><section class="mapbox"><div class="maphead"><strong>Mapa interactivo del evento</strong><span id="status">Conectando con la información del evento…</span></div><div id="map" role="application" aria-label="Mapa interactivo del evento 5K"></div></section></main><footer>5K INJU–MIDES Florida · Viernes 30 de octubre de 2026 · Plaza Artigas</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.js"></script>
+<script>
+const API_URL=''; // Pegá aquí la URL de la implementación web de Google Apps Script.
+const map=L.map('map').setView([-34.0958,-56.2142],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
+const groups={ruta:L.layerGroup().addTo(map),escenario:L.layerGroup().addTo(map),hidratacion:L.layerGroup().addTo(map),feria:L.layerGroup().addTo(map),otros:L.layerGroup().addTo(map)};
+const definitions={ruta:{label:'Recorrido de la 5K',color:'#e53935'},escenario:{label:'Escenario',color:'#7c3aed'},hidratacion:{label:'Puestos de hidratación',color:'#0891b2'},feria:{label:'Feria social y zonas',color:'#16834a'},otros:{label:'Otros puntos de referencia',color:'#d97706'}};
+const layerItems=[];
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function popupHtml(o){return '<div class="popup-type">'+esc(definitions[o.tipo]?.label||'Punto de interés')+'</div><div class="popup-title">'+esc(o.nombre||'Sin título')+'</div>'+(o.descripcion?'<div>'+esc(o.descripcion).replace(/\n/g,'<br>')+'</div>':'')+(o.horario?'<p><b>Horario:</b> '+esc(o.horario)+'</p>':'')+(o.detalles?'<p>'+esc(o.detalles)+'</p>':'')}
+function render(items){Object.values(groups).forEach(g=>g.clearLayers());document.getElementById('layers').innerHTML='';layerItems.length=0;
+ const bounds=[];
+ items.forEach((o,i)=>{const g=groups[o.tipo]||groups.otros;let feature=null;
+ if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){feature=L.polyline(o.puntos.map(p=>[+p.lat,+p.lng]),{color:o.color||definitions[o.tipo]?.color||'#0756a4',weight:5,opacity:.9});o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]))}
+ else if(o.geometria==='poligono'&&Array.isArray(o.puntos)&&o.puntos.length>2){feature=L.polygon(o.puntos.map(p=>[+p.lat,+p.lng]),{color:o.color||definitions[o.tipo]?.color||'#16834a',weight:2,fillColor:o.color||definitions[o.tipo]?.color||'#16834a',fillOpacity:.2});o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]))}
+ else if(o.lat!=null&&o.lng!=null){feature=L.marker([+o.lat,+o.lng]);bounds.push([+o.lat,+o.lng])}
+ if(feature){feature.bindPopup(popupHtml(o));feature.addTo(g)}
+ });
+ Object.entries(definitions).forEach(([key,d])=>{const row=document.createElement('div');row.className='layer';row.innerHTML='<span class="swatch" style="background:'+d.color+'"></span><label for="layer-'+key+'">'+d.label+'</label><input id="layer-'+key+'" type="checkbox" checked>';const cb=row.querySelector('input');cb.addEventListener('change',()=>cb.checked?map.addLayer(groups[key]):map.removeLayer(groups[key]));document.getElementById('layers').appendChild(row)});
+ if(bounds.length>1)map.fitBounds(bounds,{padding:[30,30],maxZoom:16});document.getElementById('status').textContent=items.length?items.length+' elemento(s) publicados':'Mapa disponible · esperando elementos publicados';
+}
+function load(){if(!API_URL){render([]);document.getElementById('status').textContent='Mapa base listo · falta conectar Google Sheets';return}
+ const cb='midesMapCb'+Date.now();window[cb]=res=>{try{if(!res||!res.ok)throw Error('Respuesta no válida');render(res.items||[]);document.getElementById('status').textContent='Información actualizada'}catch(e){document.getElementById('status').textContent='No se pudo leer la información'}finally{delete window[cb];script.remove()}};
+ const script=document.createElement('script');script.src=API_URL+'?action=list&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
+load();setInterval(load,60000);
+</script></body></html>
