@@ -9,16 +9,24 @@ Este repositorio contiene la vista pública del mapa y el editor cartográfico d
 - Pestaña exclusiva del mapa: `Mapa5K`
 - La URL de Apps Script ya está configurada en `index.html` y `editor.html`.
 
-## Paso pendiente: actualizar el proyecto compartido de Apps Script
+## Reparación de Google Sheets y activación de la API
 
-Los cambios de GitHub no se copian automáticamente al editor de Apps Script. Para activar la integración:
+**La pestaña de datos es `Mapa5K`**, en la hoja [Google Sheets del mapa](https://docs.google.com/spreadsheets/d/1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4/edit). Los encabezados esperados, en este orden, son:
 
-1. Abrí el mismo proyecto de Apps Script que usa el Centro de Prensa MIDES Florida.
-2. Antes de modificarlo, conservá una copia de seguridad de su código actual.
-3. Integrá en ese proyecto los cambios del archivo `apps-script/Code.gs` del repositorio `MidesFlorida/CENTRO-PRENSA-MIDES-FLORIDA`. Ese archivo mantiene el enrutamiento de Centro de Prensa e incorpora las acciones `mapa5kList` y `mapa5kSave` y los helpers con prefijo `mapa5k_`.
-4. En el selector de funciones de Apps Script, ejecutá una vez `prepararMapa5K` y aceptá los permisos solicitados. La función crea/verifica `Mapa5K`, aplica encabezados y devuelve un diagnóstico sin borrar elementos existentes.
-5. Guardá y elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Conservá la URL existente que termina en `/exec`.
-6. Abrí el editor del mapa, ingresá la clave editorial que ya utiliza el Apps Script compartido y guardá un elemento de prueba. El editor envía cada elemento por separado para evitar que una lista grande exceda el límite práctico de la URL. Confirmá que se registre en `Mapa5K` y aparezca en el mapa público.
+`ID | Nombre | Tipo | Geometria | Descripcion | Horario | Detalles | Color | Visible | PuntosJSON | FechaActualizacion`
+
+El código ahora crea la pestaña si falta y coloca estos encabezados cuando está vacía o solo contiene una fila de encabezados incorrectos. Si encuentra registros existentes con encabezados incompatibles, se detiene para protegerlos.
+
+**Importante: publicar el backend es un paso independiente de GitHub.**
+
+1. Abrí el mismo proyecto de Apps Script que utiliza el Centro de Prensa MIDES Florida.
+2. Hacé una copia de seguridad del código actual antes de integrar cambios.
+3. Integrá el archivo actualizado `apps-script/Code.gs` del repositorio `MidesFlorida/CENTRO-PRENSA-MIDES-FLORIDA`, conservando todas las funciones editoriales. Incluye las acciones `mapa5kList` y `mapa5kSave` y funciones auxiliares con prefijo `mapa5k_`.
+4. En el selector de funciones, ejecutá `prepararMapa5K` una vez y aceptá los permisos. En el registro de ejecución debe aparecer `ok: true`, la pestaña `Mapa5K` y los encabezados.
+5. Guardá el proyecto. Luego elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Mantené la URL actual que termina en `/exec`.
+6. Abrí el [editor del mapa](https://midesflorida.github.io/5k-INJU-MIDES-2026/editor.html), ingresá una clave editorial válida y probá guardar un punto de prueba. Confirmá que aparezca una fila nueva en `Mapa5K` y que el editor muestre confirmación de la API.
+
+La clave se valida contra las claves editoriales configuradas en el Apps Script compartido; no agregues claves al HTML público.
 
 **No pegues el antiguo archivo independiente `5k-INJU-MIDES-2026/apps-script/Code.gs` encima del script compartido:** contiene sus propios `doGet`, `getSheet_` y encabezados, y podría interferir con el Centro de Prensa.
 
