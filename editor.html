@@ -21,7 +21,7 @@
 <section class="mapbox"><div class="maphead"><b>Área de diseño</b><span>Plaza Artigas · Florida, Uruguay</span></div><div id="map"></div></section></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbxgAbgK6d4PqMvMxov_Jg8x0el_F7jM1gvDsn66eIEFPxoa261-BgmnYGqtRSmM2PtvnQ/exec'; // Pegá aquí la URL de la implementación web de Google Apps Script.
+const API_URL='https://script.google.com/macros/s/AKfycbzgpeScKyHRnmtFTjVvS__uv3crjL22lRutqf82h_do-HgeUE59GbGQODYN5KGMNr8ZaA/exec'; // Pegá aquí la URL de la implementación web de Google Apps Script.
 let adminKey='';const map=L.map('map').setView([-34.0958,-56.2142],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
 const drawn=new L.FeatureGroup().addTo(map);let records=[],selectedId=null,pending=null,drawControl=null;
 const $=id=>document.getElementById(id);function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
