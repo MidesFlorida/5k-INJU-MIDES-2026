@@ -16,8 +16,9 @@ Los cambios de GitHub no se copian automáticamente al editor de Apps Script. Pa
 1. Abrí el mismo proyecto de Apps Script que usa el Centro de Prensa MIDES Florida.
 2. Antes de modificarlo, conservá una copia de seguridad de su código actual.
 3. Integrá en ese proyecto los cambios del archivo `apps-script/Code.gs` del repositorio `MidesFlorida/CENTRO-PRENSA-MIDES-FLORIDA`. Ese archivo mantiene el enrutamiento de Centro de Prensa e incorpora las acciones `mapa5kList` y `mapa5kSave` y los helpers con prefijo `mapa5k_`.
-4. Guardá y elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Conservá la URL existente que termina en `/exec`.
-5. Abrí el editor del mapa, ingresá la clave editorial que ya utiliza el Apps Script compartido y probá guardar un elemento de prueba. Confirmá que se registre en `Mapa5K` y aparezca en el mapa público.
+4. En el selector de funciones de Apps Script, ejecutá una vez `prepararMapa5K` y aceptá los permisos solicitados. La función crea/verifica `Mapa5K`, aplica encabezados y devuelve un diagnóstico sin borrar elementos existentes.
+5. Guardá y elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Conservá la URL existente que termina en `/exec`.
+6. Abrí el editor del mapa, ingresá la clave editorial que ya utiliza el Apps Script compartido y guardá un elemento de prueba. El editor envía cada elemento por separado para evitar que una lista grande exceda el límite práctico de la URL. Confirmá que se registre en `Mapa5K` y aparezca en el mapa público.
 
 **No pegues el antiguo archivo independiente `5k-INJU-MIDES-2026/apps-script/Code.gs` encima del script compartido:** contiene sus propios `doGet`, `getSheet_` y encabezados, y podría interferir con el Centro de Prensa.
 
