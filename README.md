@@ -14,8 +14,9 @@ Este repositorio contiene la vista pública, el editor cartográfico y la API in
 - Dibujo y edición de rutas, áreas y puntos; guardado acumulativo en la pestaña `Mapa5K`.
 - Flechas que indican el sentido de los recorridos en el editor y en el mapa público; al seleccionar una ruta, zona, punto o corredor el mapa acerca la vista al objeto.
 - Interfaz adaptable a computadoras, tabletas y teléfonos.
+- Icono cuadrado basado en el logo oficial 5K para el favicon, el manifiesto de instalación y los accesos directos de la aplicación web.
 - Cronómetro individual: cada corredor ingresa un dorsal o alias, pulsa **Iniciar mi cronómetro** y al llegar pulsa **Detener y registrar tiempo**. El inicio y el final se registran con hora del servidor, y los últimos diez tiempos aparecen en el mapa público.
-- Seguimiento GPS **voluntario**: cada participante ingresa un dorsal o alias y activa explícitamente el uso de su ubicación. El alias y la posición actual se ven en el mapa público mientras comparte. Debe dejar la página abierta y permitir el acceso al GPS.
+- Seguimiento GPS **voluntario**: cada participante ingresa un dorsal o alias y activa explícitamente el uso de su ubicación. El alias y la posición actual se ven en el mapa público mientras comparte. Debe dejar la página abierta y permitir el acceso al GPS. El popup del marcador muestra distancia recorrida y restante estimadas a lo largo de la ruta publicada si el GPS está a menos de 350 metros del trazado; son estimaciones y no sustituyen un chip de cronometraje.
 - Las últimas posiciones se muestran solo si tienen menos de 45 segundos. El backend elimina registros GPS de más de 24 horas durante una actualización posterior.
 
 ## Hojas de Google Sheets
