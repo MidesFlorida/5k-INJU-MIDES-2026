@@ -6,8 +6,7 @@
  * Configuración:
  * - La planilla está definida por MAPA5K_SPREADSHEET_ID.
  * - La pestaña Mapa5K y sus encabezados se crean al llamar mapa5kInicializar.
- * - Puede definirse la propiedad de script ADMIN_KEY; si no existe, se aceptan
- *   las claves de compatibilidad que usa el editor actual.
+ * - Configurá la propiedad de script ADMIN_KEY con la misma clave que ingresarás en el editor.
  *
  * Para activar la API: copiar este archivo a un proyecto NUEVO de Apps Script,
  * ejecutar prepararMapa5K(), implementar como aplicación web y pegar la URL /exec
@@ -20,7 +19,6 @@ const MAPA5K_HEADERS = [
   'ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles',
   'Color','Visible','PuntosJSON','FechaActualizacion'
 ];
-const MAPA5K_COMPAT_KEYS = ['Ik3r2026','Svelez2026'];
 
 function doGet(e) {
   let result;
@@ -41,12 +39,8 @@ function doGet(e) {
       const payload = JSON.parse(String(p.data || '{}'));
       const configuredKey = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
       const suppliedKey = String(payload.key || '');
-      const accepted = configuredKey ? suppliedKey === configuredKey : MAPA5K_COMPAT_KEYS.includes(suppliedKey);
-      if (!accepted) {
-        throw new Error(configuredKey
-          ? 'Clave de edición incorrecta.'
-          : 'No se aceptó la clave de edición. Configurá la propiedad ADMIN_KEY en el proyecto Apps Script.');
-      }
+      if (!configuredKey) throw new Error('Falta configurar la propiedad ADMIN_KEY en el proyecto Apps Script.');
+      if (suppliedKey !== configuredKey) throw new Error('Clave de edición incorrecta.');
       result = {ok:true, items:mapa5kSave_(payload.items || [])};
     } else {
       throw new Error('Acción no reconocida: '+action);
