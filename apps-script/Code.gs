@@ -1,107 +1,194 @@
 /**
- * API del mapa 5K INJU–MIDES Florida.
- * La pestaña Mapa5K se crea automáticamente en la hoja configurada.
- * ID de la hoja base: 113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU
+ * API INDEPENDIENTE DEL MAPA 5K INJU–MIDES FLORIDA.
+ * Este archivo pertenece a MidesFlorida/5k-INJU-MIDES-2026.
+ * No comparte el backend del Centro de Prensa.
  *
- * Configurar en Propiedades del script:
- * ADMIN_KEY = clave larga de edición
- * SPREADSHEET_ID es opcional; si existe, tiene prioridad sobre el ID predeterminado.
+ * Configuración:
+ * - La planilla está definida por MAPA5K_SPREADSHEET_ID.
+ * - La pestaña Mapa5K y sus encabezados se crean al llamar mapa5kInicializar.
+ * - Puede definirse la propiedad de script ADMIN_KEY; si no existe, se aceptan
+ *   las claves de compatibilidad que usa el editor actual.
+ *
+ * Para activar la API: copiar este archivo a un proyecto NUEVO de Apps Script,
+ * ejecutar prepararMapa5K(), implementar como aplicación web y pegar la URL /exec
+ * en api-config.js dentro de este mismo repositorio.
  */
-const DEFAULT_SPREADSHEET_ID = '113AiF1ahuZuEW9PWeHNhJYdJXMidZd084LmYOx7N6NU';
-const SHEET_NAME = 'Mapa5K';
-const HEADERS = ['id','nombre','tipo','geometria','puntos_json','descripcion','horario','detalles','color','visible','actualizado'];
+const MAPA5K_SPREADSHEET_ID = '1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
+const MAPA5K_SHEET_NAME = 'Mapa5K';
+const MAPA5K_API_VERSION = '2026-10-23-mapa5k-v5';
+const MAPA5K_HEADERS = [
+  'ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles',
+  'Color','Visible','PuntosJSON','FechaActualizacion'
+];
+const MAPA5K_COMPAT_KEYS = ['Ik3r2026','Svelez2026'];
 
 function doGet(e) {
-  const p = (e && e.parameter) || {};
-  const callback = /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(p.callback || '') ? p.callback : '';
   let result;
   try {
-    if (p.action === 'list') {
-      result = { ok: true, items: readItems_() };
-    } else if (p.action === 'save') {
-      const expected = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
-      if (!expected || !p.data) throw new Error('Falta configurar ADMIN_KEY o los datos.');
-      const payload = JSON.parse(p.data);
-      if (!payload.key || payload.key !== expected) throw new Error('Clave de edición incorrecta.');
-      if (!Array.isArray(payload.items)) throw new Error('La lista de elementos no es válida.');
-      writeItems_(payload.items);
-      result = { ok: true, count: payload.items.length, message: 'Guardado' };
+    const p = (e && e.parameter) || {};
+    const action = String(p.action || 'mapa5kList');
+
+    if (action === 'ping') {
+      result = {ok:true, service:'Mapa 5K INJU–MIDES Florida'};
+    } else if (action === 'mapa5kInicializar') {
+      result = prepararMapa5K();
+    } else if (action === 'mapa5kDiagnostico') {
+      const sh = mapa5kSheet_();
+      result = mapa5kDiagnostic_(sh);
+    } else if (action === 'mapa5kList') {
+      result = {ok:true, items:mapa5kList_()};
+    } else if (action === 'mapa5kSave') {
+      const payload = JSON.parse(String(p.data || '{}'));
+      const configuredKey = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
+      const suppliedKey = String(payload.key || '');
+      const accepted = configuredKey ? suppliedKey === configuredKey : MAPA5K_COMPAT_KEYS.includes(suppliedKey);
+      if (!accepted) {
+        throw new Error(configuredKey
+          ? 'Clave de edición incorrecta.'
+          : 'No se aceptó la clave de edición. Configurá la propiedad ADMIN_KEY en el proyecto Apps Script.');
+      }
+      result = {ok:true, items:mapa5kSave_(payload.items || [])};
     } else {
-      result = { ok: true, service: 'Mapa 5K INJU–MIDES Florida', apiVersion: '1.1' };
+      throw new Error('Acción no reconocida: '+action);
     }
   } catch (err) {
-    result = { ok: false, error: String(err && err.message ? err.message : err) };
+    result = {ok:false, error:String(err && err.message ? err.message : err)};
   }
-  const body = callback ? callback + '(' + JSON.stringify(result) + ');' : JSON.stringify(result);
-  return ContentService.createTextOutput(body)
-    .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
-}
 
-function readItems_() {
-  const sheet = getSheet_();
-  const values = sheet.getDataRange().getValues();
-  if (values.length < 2) return [];
-  const headers = values[0].map(String);
-  return values.slice(1).filter(row => row[0]).map(row => {
-    const o = {};
-    headers.forEach((h, i) => o[h] = row[i]);
-    let puntos = [];
-    try { puntos = JSON.parse(o.puntos_json || '[]'); } catch (_) {}
-    return {
-      id: String(o.id || ''),
-      nombre: String(o.nombre || ''),
-      tipo: String(o.tipo || 'otros'),
-      geometria: String(o.geometria || 'punto'),
-      puntos: puntos,
-      descripcion: String(o.descripcion || ''),
-      horario: String(o.horario || ''),
-      detalles: String(o.detalles || ''),
-      color: String(o.color || '#0756a4'),
-      visible: o.visible === true || String(o.visible).toLowerCase() === 'true'
-    };
-  });
-}
-
-function writeItems_(items) {
-  const sheet = getSheet_();
-  const rows = [HEADERS];
-  items.forEach(o => {
-    if (!o || !o.id || !o.nombre) return;
-    const puntos = Array.isArray(o.puntos) ? o.puntos.map(p => ({
-      lat: Number(p.lat), lng: Number(p.lng)
-    })).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng)) : [];
-    rows.push([
-      String(o.id), String(o.nombre), String(o.tipo || 'otros'),
-      String(o.geometria || 'punto'), JSON.stringify(puntos),
-      String(o.descripcion || ''), String(o.horario || ''),
-      String(o.detalles || ''), String(o.color || '#0756a4'),
-      o.visible !== false, new Date()
-    ]);
-  });
-  sheet.clearContents();
-  sheet.getRange(1, 1, rows.length, HEADERS.length).setValues(rows);
-  sheet.setFrozenRows(1);
-  sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
-  sheet.autoResizeColumns(1, HEADERS.length);
-}
-
-function getSheet_() {
-  const props = PropertiesService.getScriptProperties();
-  const id = props.getProperty('SPREADSHEET_ID') || DEFAULT_SPREADSHEET_ID;
-  const ss = SpreadsheetApp.openById(id);
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
-  if (sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
-    sheet.autoResizeColumns(1, HEADERS.length);
+  result.apiVersion = MAPA5K_API_VERSION;
+  result.jsonpSupported = true;
+  const json = JSON.stringify(result).replace(/</g, '\\u003c');
+  const callback = String((e && e.parameter && e.parameter.callback) || '');
+  if (callback && /^[A-Za-z_$][0-9A-Za-z_$\.]{0,100}$/.test(callback)) {
+    return ContentService.createTextOutput(callback+'('+json+');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-  return sheet;
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
 }
 
-/** Ejecutar manualmente una vez desde Apps Script para crear/preparar la pestaña Mapa5K. */
-function prepararHoja5K() {
-  const sheet = getSheet_();
-  Logger.log('Hoja lista: ' + sheet.getParent().getUrl() + ' (' + sheet.getName() + ')');
+function mapa5kDiagnostic_(sheet) {
+  return {
+    ok:true,
+    spreadsheetId:MAPA5K_SPREADSHEET_ID,
+    spreadsheetUrl:'https://docs.google.com/spreadsheets/d/'+MAPA5K_SPREADSHEET_ID+'/edit',
+    sheetName:sheet.getName(),
+    headers:sheet.getRange(1,1,1,MAPA5K_HEADERS.length).getDisplayValues()[0],
+    elements:Math.max(0,sheet.getLastRow()-1),
+    lastRow:sheet.getLastRow()
+  };
+}
+
+/** Ejecutar manualmente una vez para autorizar y crear/verificar la pestaña. */
+function prepararMapa5K() {
+  const sh = mapa5kSheet_();
+  sh.setFrozenRows(1);
+  sh.getRange(1,1,1,MAPA5K_HEADERS.length)
+    .setFontWeight('bold').setBackground('#0756a4').setFontColor('#ffffff');
+  SpreadsheetApp.flush();
+  return mapa5kDiagnostic_(sh);
+}
+
+function mapa5kSheet_() {
+  const ss = SpreadsheetApp.openById(MAPA5K_SPREADSHEET_ID);
+  let sh = ss.getSheetByName(MAPA5K_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(MAPA5K_SHEET_NAME);
+    sh.getRange(1,1,1,MAPA5K_HEADERS.length).setValues([MAPA5K_HEADERS]);
+    sh.setFrozenRows(1);
+  } else if (sh.getLastRow() === 0) {
+    sh.getRange(1,1,1,MAPA5K_HEADERS.length).setValues([MAPA5K_HEADERS]);
+    sh.setFrozenRows(1);
+  } else {
+    const existing = sh.getRange(1,1,1,Math.max(sh.getLastColumn(),MAPA5K_HEADERS.length)).getDisplayValues()[0];
+    const matches = MAPA5K_HEADERS.every((header,i) => existing[i] === header);
+    if (!matches) {
+      if (sh.getLastRow() <= 1) {
+        sh.getRange(1,1,1,MAPA5K_HEADERS.length).setValues([MAPA5K_HEADERS]);
+        if (sh.getLastColumn() > MAPA5K_HEADERS.length) {
+          sh.getRange(1,MAPA5K_HEADERS.length+1,1,sh.getLastColumn()-MAPA5K_HEADERS.length).clearContent();
+        }
+        sh.setFrozenRows(1);
+      } else {
+        throw new Error('La pestaña Mapa5K contiene datos y sus encabezados no coinciden. No se modificó para proteger la información existente.');
+      }
+    }
+  }
+  return sh;
+}
+
+function mapa5kList_() {
+  const sh = mapa5kSheet_();
+  if (sh.getLastRow() < 2) return [];
+  return sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS.length).getValues()
+    .filter(row => row[0])
+    .map(row => ({
+      id:String(row[0]),
+      nombre:String(row[1] || ''),
+      tipo:String(row[2] || 'otros'),
+      geometria:String(row[3] || 'punto'),
+      descripcion:String(row[4] || ''),
+      horario:String(row[5] || ''),
+      detalles:String(row[6] || ''),
+      color:String(row[7] || '#0756a4'),
+      visible:String(row[8]).toLowerCase() !== 'false',
+      puntos:mapa5kParsePoints_(row[9])
+    }));
+}
+
+function mapa5kParsePoints_(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(String(value || '[]'));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function mapa5kSave_(items) {
+  if (!Array.isArray(items)) throw new Error('Los elementos del mapa no tienen un formato válido.');
+  if (items.length > 300) throw new Error('El mapa supera el máximo de 300 elementos por guardado.');
+
+  const sh = mapa5kSheet_();
+  const existing = sh.getLastRow() > 1
+    ? sh.getRange(2,1,sh.getLastRow()-1,MAPA5K_HEADERS.length).getValues()
+    : [];
+  const rowById = {};
+  existing.forEach((row,i) => { if (row[0]) rowById[String(row[0])] = i+2; });
+
+  const seen = {};
+  items.forEach(item => {
+    if (!item || !item.id) throw new Error('Hay un elemento del mapa sin identificador.');
+    const id = String(item.id);
+    if (seen[id]) throw new Error('Hay identificadores duplicados en el mapa.');
+    seen[id] = true;
+
+    const row = [
+      id, String(item.nombre || ''), String(item.tipo || 'otros'),
+      String(item.geometria || 'punto'), String(item.descripcion || ''),
+      String(item.horario || ''), String(item.detalles || ''),
+      String(item.color || '#0756a4'), item.visible === false ? 'false' : 'true',
+      JSON.stringify(mapa5kParsePoints_(item.puntos)), new Date()
+    ];
+    if (rowById[id]) {
+      sh.getRange(rowById[id],1,1,MAPA5K_HEADERS.length).setValues([row]);
+    } else {
+      sh.appendRow(row);
+      rowById[id] = sh.getLastRow();
+    }
+  });
+
+  // Guardado acumulativo: nunca borra otras capas que no vengan en la petición.
+  SpreadsheetApp.flush();
+  const saved = mapa5kList_();
+  const byId = {};
+  saved.forEach(item => { byId[String(item.id)] = item; });
+  items.forEach(item => {
+    const check = byId[String(item.id)];
+    if (!check) throw new Error('Google Sheets no confirmó el elemento: '+String(item.nombre || item.id));
+    if (JSON.stringify(mapa5kParsePoints_(check.puntos)) !== JSON.stringify(mapa5kParsePoints_(item.puntos))) {
+      throw new Error('Google Sheets no confirmó la geometría del elemento: '+String(item.nombre || item.id));
+    }
+  });
+  return saved;
 }
