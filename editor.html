@@ -12,7 +12,8 @@
 @media(max-width:520px){.app{grid-template-rows:38dvh 62dvh}.title{font-size:16px}.subtitle{font-size:10px}.type{font-size:9px}.geometry{font-size:9px}.toolbar{gap:6px}.instructions{font-size:9.5px}.modal-card{padding:16px}.status-badge{font-size:9px}}
 @media(orientation:landscape) and (max-width:900px){.app{grid-template-columns:minmax(250px,36vw) minmax(0,1fr);grid-template-rows:100dvh}.app>aside{grid-column:1;grid-row:1;height:100dvh;max-height:100dvh;overflow-y:auto}.main{grid-column:2;grid-row:1;height:100dvh}.status-badge{top:60px;right:8px;left:auto;max-width:calc(64vw - 24px)}.legend{max-width:48vw;max-height:30vh}}
 @media(min-width:901px) and (max-width:1200px){.app{grid-template-columns:315px minmax(0,1fr)}}
-.race-control{padding:11px;background:#f0f6fb;border:1px solid #cdddea;border-radius:10px;display:grid;gap:9px}.race-control-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.race-control-title{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#58738b}.race-clock{font-size:clamp(1.65rem,3vw,2.2rem);line-height:1.1;font-weight:950;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:#073568}.race-state{font-size:10px;font-weight:850;text-align:right;color:#17683d}.race-control-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.race-control .btn{font-size:11px;min-height:40px}.race-control .btn:disabled{opacity:.4}.race-help{margin:0;font-size:10px;line-height:1.4;color:#5e758a}
+.race-notice{padding:10px 11px;background:#eef6fb;border:1px solid #d0e0ed;border-radius:9px;color:#234a69;font-size:10px;line-height:1.45;font-weight:700}
+
 @media(max-width:900px){.race-control{padding:9px}.race-control-buttons{gap:6px}.race-control .btn{min-height:42px}}
 </style>
 </head>
@@ -24,17 +25,8 @@
  <section class="race-control" aria-label="Control del cronómetro oficial">
   <div class="race-control-top"><div><div class="race-control-title">Cronómetro oficial</div><div class="race-clock" id="editorRaceClock">00:00:00</div></div><div class="race-state" id="editorRaceState" role="status">Esperando salida</div></div>
   <div class="race-control-buttons"><button type="button" class="btn primary" id="raceStart" disabled>▶ Iniciar carrera</button><button type="button" class="btn warn" id="raceFinish" disabled>■ Finalizar carrera</button></div>
-  <p class="race-help">El cronómetro se sincroniza con el mapa público. Solo el operador autorizado puede iniciarlo o finalizarlo.</p>
- </section>
- <div class="button-grid">
-  <button class="btn primary" id="start">＋ Nueva capa</button>
-  <button class="btn" id="finish" disabled>Finalizar dibujo</button>
-  <button class="btn" id="cancel" disabled>Cancelar dibujo</button>
-  <button class="btn primary" id="editSelected" disabled>✎ Editar vértices</button>
-  <button class="btn" id="addPoint" disabled>＋ Agregar punto</button>
-  <button class="btn warn" id="deletePoint" disabled>Eliminar punto seleccionado</button>
-  <button class="btn" id="cancelEdit" disabled>↶ Descartar edición</button>
-  <button class="btn primary" id="saveEdit" disabled>Guardar edición</button>
+  <p class="race-help">El cronómetro se sincroniza con e <div class="race-notice">Cada corredor inicia y finaliza su propio cronómetro desde el mapa público. Los tiempos quedan registrados individualmente en Google Sheets.</div>
+ar edición</button>
  </div>
  <div><div class="type-title">Tipo de elemento</div><div class="types" id="categoryTypes">
   <button class="type active" data-category="ruta"><i class="dot" style="background:#0756a4"></i>Recorrido 5K</button>
@@ -101,7 +93,7 @@ map.createPane('directionArrows');map.getPane('directionArrows').style.zIndex=76
 map.createPane('vertexHandles');map.getPane('vertexHandles').style.zIndex=900;
 const featureGroup=L.featureGroup().addTo(map),previewGroup=L.layerGroup().addTo(map),vertexGroup=L.layerGroup().addTo(map);
 let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
-let raceState={state:'ESPERA',startAt:null,finishAt:null},raceControlBusy=false,raceStateReady=false;
+
 const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
 function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
 function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
@@ -287,35 +279,7 @@ function refreshRaceState(){
   drawEditorRaceClock();
  }).catch(()=>{});
 }
-async function controlRace(action){
- if(!API_URL){setStatus('Falta conectar la API propia de la 5K en api-config.js.',true);return;}
- if(!ensureAdminKey())return;
- if(action==='mapa5kCarreraFinalizar'&&raceState.state!=='EN_CURSO'){setStatus('La carrera no está en curso.',true);return;}
- if(action==='mapa5kCarreraFinalizar'&&!confirm('¿Confirmás finalizar el cronómetro oficial de la carrera?'))return;
- if(action==='mapa5kCarreraIniciar'&&raceState.state==='FINALIZADA'&&!confirm('El cronómetro anterior está finalizado. ¿Querés iniciar una nueva medición desde cero?'))return;
- raceControlBusy=true;drawEditorRaceClock();
- const payload=encodeURIComponent(JSON.stringify({key:adminKey}));
- const success=action==='mapa5kCarreraIniciar'?'Cronómetro oficial iniciado.':'Cronómetro oficial finalizado.';
- try{
-  await jsonp(API_URL+'?action='+action+'&data='+payload,success,'No se pudo cambiar el cronómetro.',function(res){
-   raceState={state:res.state||'ESPERA',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null};
-  });
- }catch(_){}
- finally{raceControlBusy=false;drawEditorRaceClock();}
-}
-function persistRecord(o,successMessage){
- if(!API_URL){const message='Falta configurar la API independiente del mapa 5K. Publicá apps-script/Code.gs y pegá la URL en api-config.js.';setStatus(message,true);return Promise.reject(new Error(message));}
- if(!ensureAdminKey())return Promise.reject(new Error('Falta clave de edición'));
- const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[payloadForRecord(o)]}));
- return jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado en Google Sheets: '+o.nombre),'No se pudo guardar en Google Sheets.',function(){});
-}
-async function loadRecords(){
- if(!API_URL){records=[];renderList();renderFeatures();syncButtons();setStatus('Falta configurar la API propia del mapa 5K en api-config.js. El editor no usará otra API compartida.',true);return;}
- setStatus('Verificando la planilla de Google Sheets…',false);
- try{
-  const diagnostic=await jsonp(API_URL+'?action=mapa5kDiagnostico','Google Sheets responde.','No se pudo verificar la planilla de Google Sheets.');
-  if(String(diagnostic.spreadsheetId||'')!==MAPA5K_SPREADSHEET_ID){
-   setStatus('La API responde, pero apunta a otra planilla. Actualizá apps-script/Code.gs y publicá una nueva versión de Apps Script. ID actual: '+String(diagnostic.spreadsheetId||'(sin ID)'),true);
+async function conte Apps Script. ID actual: '+String(diagnostic.spreadsheetId||'(sin ID)'),true);
    throw new Error('La API está conectada a otra planilla.');
   }
   const data=await jsonp(API_URL+'?action=mapa5kList','Capas cargadas desde Google Sheets.','No se pudo cargar el mapa.',function(res){records=Array.isArray(res.items)?res.items.map(payloadForRecord):[];});
