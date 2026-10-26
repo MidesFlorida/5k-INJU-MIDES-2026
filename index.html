@@ -211,10 +211,28 @@ let activeTimerId='';
 try{activeTimerId=sessionStorage.getItem('mides5k-active-timer-id')||'';}catch(_){}
 if(!activeTimerId){activeTimerId=createRunId();try{sessionStorage.setItem('mides5k-active-timer-id',activeTimerId);}catch(_){}}
 let runnerTimer={state:'SIN_REGISTRO',startAt:null,finishAt:null,timeMs:null},timerApiReady=false,timerBusy=false;
+let serverClockOffset=0;
+function apiJsonp(action,data,onSuccess,onError){
+ if(!API_URL){if(onError)onError(new Error('La API de la 5K todavía no está configurada.'));return;}
+ const cb='mapa5kLiveCb'+Date.now()+'_'+Math.floor(Math.random()*100000);
+ let script=null,done=false;
+ const cleanup=()=>{if(done)return;done=true;if(script)script.remove();try{delete window[cb];}catch(_){window[cb]=undefined;}};
+ window[cb]=res=>{
+  cleanup();
+  if(!res||res.ok!==true){if(onError)onError(new Error(res&&res.error?res.error:'Respuesta no válida de la API.'));return;}
+  if(Number.isFinite(Number(res.serverNow)))serverClockOffset=Number(res.serverNow)-Date.now();
+  if(onSuccess)onSuccess(res);
+ };
+ script=document.createElement('script');script.async=true;
+ script.onerror=()=>{cleanup();if(onError)onError(new Error('No se pudo conectar con el servidor de la 5K.'));};
+ let url=API_URL+'?action='+encodeURIComponent(action)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();
+ if(data)url+='&data='+encodeURIComponent(JSON.stringify(data));
+ script.src=url;document.head.appendChild(script);
+}
 function setRunnerTimerStatus(message,isError){const el=document.getElementById('runnerTimerStatus');el.textContent=message;el.style.color=isError?'#a51d2d':'#34546f';}
 function drawRunnerTimer(){
  let elapsed=0,label='Preparado para iniciar';
- if(runnerTimer.state==='EN_CURSO'&&runnerTimer.startAt){elapsed=Date.now()-runnerTimer.startAt;label='CRONÓMETRO EN CURSO';}
+ if(runnerTimer.state==='EN_CURSO'&&runnerTimer.startAt){elapsed=(Date.now()+serverClockOffset)-runnerTimer.startAt;label='CRONÓMETRO EN CURSO';}
  else if(runnerTimer.state==='FINALIZADA'&&runnerTimer.timeMs!==null){elapsed=runnerTimer.timeMs;label='TIEMPO REGISTRADO';}
  else if(runnerTimer.state==='SIN_REGISTRO'){label='Preparado para iniciar';}
  document.getElementById('runnerTimerClock').textContent=formatRaceTime(elapsed);
