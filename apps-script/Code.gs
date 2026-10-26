@@ -66,6 +66,7 @@ function doGet(e) {
     result = {ok:false, error:String(err && err.message ? err.message : err)};
   }
 
+  result.serverNow = Date.now();
   result.apiVersion = MAPA5K_API_VERSION;
   result.jsonpSupported = true;
   const json = JSON.stringify(result).replace(/</g, '\\u003c');
