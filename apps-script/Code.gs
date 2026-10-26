@@ -160,19 +160,21 @@ function mapa5kGpsActualizar_(payload) {
     if (last >= 2) {
       const rows = sh.getRange(2, 1, last - 1, MAPA5K_GPS_HEADERS.length).getValues();
       for (let i = 0; i < rows.length; i++) {
-        const rowId = String(rows[i][0] || '');
-        const updatedAt = Number(rows[i][6]) || 0;
-        if (updatedAt <= 0 || now - updatedAt > MAPA5K_GPS_RETENTION_MS) {
-          sh.deleteRow(i + 2);
-          // Deleting shifts the later row positions; restart search after cleanup.
-          return mapa5kGpsActualizar_(payload);
-        }
-        if (rowId === id) targetRow = i + 2;
+        if (String(rows[i][0] || '') === id) targetRow = i + 2;
       }
     }
     const row = [id, alias, lat, lng, Number.isFinite(accuracy) && accuracy >= 0 ? accuracy : '', true, now];
     if (targetRow) sh.getRange(targetRow, 1, 1, MAPA5K_GPS_HEADERS.length).setValues([row]);
     else sh.appendRow(row);
+    // Prune only this GPS sheet; keep latest positions and remove records older than 24 hours.
+    const afterWriteLast = sh.getLastRow();
+    if (afterWriteLast >= 2) {
+      const currentRows = sh.getRange(2, 1, afterWriteLast - 1, MAPA5K_GPS_HEADERS.length).getValues();
+      for (let i = currentRows.length - 1; i >= 0; i--) {
+        const updatedAt = Number(currentRows[i][6]) || 0;
+        if (updatedAt <= 0 || now - updatedAt > MAPA5K_GPS_RETENTION_MS) sh.deleteRow(i + 2);
+      }
+    }
     SpreadsheetApp.flush();
     return {ok:true, updatedAt:now};
   } finally {
