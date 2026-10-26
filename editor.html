@@ -71,10 +71,11 @@
  </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="api-config.js"></script>
 <script>
 (function(){
 'use strict';
-const API_URL='https://script.google.com/macros/s/AKfycbzgpeScKyHRnmtFTjVvS__uv3crjL22lRutqf82h_do-HgeUE59GbGQODYN5KGMNr8ZaA/exec';
+const API_URL=(window.MAPA5K_API_URL||'').trim();
 const API_VERSION_PREFIX='2026-10-23-mapa5k-v';
 const MAPA5K_SPREADSHEET_ID='1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
 const $=id=>document.getElementById(id);
@@ -241,11 +242,13 @@ function jsonp(url,successMessage,failureMessage,onSuccess){
  });
 }
 function persistRecord(o,successMessage){
+ if(!API_URL){const message='Falta configurar la API independiente del mapa 5K. Publicá apps-script/Code.gs y pegá la URL en api-config.js.';setStatus(message,true);return Promise.reject(new Error(message));}
  if(!ensureAdminKey())return Promise.reject(new Error('Falta clave de edición'));
  const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[payloadForRecord(o)]}));
  return jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado en Google Sheets: '+o.nombre),'No se pudo guardar en Google Sheets.',function(){});
 }
 async function loadRecords(){
+ if(!API_URL){records=[];renderList();renderFeatures();syncButtons();setStatus('Falta configurar la API propia del mapa 5K en api-config.js. El editor no usará otra API compartida.',true);return;}
  setStatus('Verificando la planilla de Google Sheets…',false);
  try{
   const diagnostic=await jsonp(API_URL+'?action=mapa5kDiagnostico','Google Sheets responde.','No se pudo verificar la planilla de Google Sheets.');
@@ -374,6 +377,7 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modalCancel'
 $('itemName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveModalInfo();}});
 $('showAll').onclick=()=>setAllVisibility(true);$('hideAll').onclick=()=>setAllVisibility(false);
 $('initSheet').onclick=async()=>{
+ if(!API_URL){setStatus('Primero publicá apps-script/Code.gs y pegá la URL /exec en api-config.js.',true);return;}
  try{
   const result=await jsonp(API_URL+'?action=mapa5kInicializar','Pestaña Mapa5K y encabezados verificados.','No se pudo preparar Google Sheets.');
   if(String(result.spreadsheetId||'')!==MAPA5K_SPREADSHEET_ID){
