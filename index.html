@@ -126,6 +126,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,att
 const groups={ruta:L.layerGroup().addTo(map),escenario:L.layerGroup().addTo(map),hidratacion:L.layerGroup().addTo(map),feria:L.layerGroup().addTo(map),otros:L.layerGroup().addTo(map)};
 const liveRunnersLayer=L.layerGroup().addTo(map);
 let routeArrowConfigs=[];
+let publicRoutes=[];
 let runnerLayerVisible=true;
 const definitions={ruta:{label:'Recorrido de la 5K',color:'#e53935'},escenario:{label:'Escenario',color:'#7c3aed'},hidratacion:{label:'Puestos de hidratación',color:'#0891b2'},feria:{label:'Feria social y zonas',color:'#16834a'},otros:{label:'Otros puntos de referencia',color:'#d97706'}};
 const layerItems=[];
@@ -168,6 +169,54 @@ function zoomToRoutePoints(latlngs){
  const bounds=L.latLngBounds(latlngs);
  if(bounds.isValid())map.flyToBounds(bounds,{padding:[48,48],maxZoom:17,duration:.45});
 }
+const EARTH_RADIUS_M=6371008.8;
+function haversineMeters(a,b){
+ const rad=Math.PI/180,lat1=Number(a[0])*rad,lat2=Number(b[0])*rad;
+ const dLat=(Number(b[0])-Number(a[0]))*rad,dLng=(Number(b[1])-Number(a[1]))*rad;
+ const q=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+ return 2*EARTH_RADIUS_M*Math.atan2(Math.sqrt(q),Math.sqrt(Math.max(0,1-q)));
+}
+function formatDistanceMeters(value){
+ const meters=Math.max(0,Number(value)||0);
+ if(meters>=1000)return (meters>=10000?(meters/1000).toFixed(1):(meters/1000).toFixed(2))+' km';
+ return Math.round(meters)+' m';
+}
+function buildPublicRoutes(items){
+ return (items||[]).filter(o=>o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1)
+  .map(o=>{
+   const points=o.puntos.map(p=>[Number(p.lat),Number(p.lng)]).filter(p=>Number.isFinite(p[0])&&Number.isFinite(p[1])&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180);
+   if(points.length<2)return null;
+   const cumulative=[0];let total=0;
+   for(let i=1;i<points.length;i++){total+=haversineMeters(points[i-1],points[i]);cumulative.push(total);}
+   const meanLat=points.reduce((sum,p)=>sum+p[0],0)/points.length;
+   return {name:String(o.nombre||'Recorrido de la 5K'),points,cumulative,totalMeters:total,meanLat,refLat:points[0][0],refLng:points[0][1]};
+  }).filter(route=>route&&route.totalMeters>0);
+}
+function estimateRunnerProgress(latitude,longitude){
+ if(!publicRoutes.length)return null;
+ const lat=Number(latitude),lng=Number(longitude);
+ if(!Number.isFinite(lat)||!Number.isFinite(lng))return null;
+ let best=null;
+ publicRoutes.forEach(route=>{
+  const factor=Math.cos(route.meanLat*Math.PI/180),rad=Math.PI/180;
+  const xy=p=>({x:(p[1]-route.refLng)*rad*EARTH_RADIUS_M*factor,y:(p[0]-route.refLat)*rad*EARTH_RADIUS_M});
+  const point=xy([lat,lng]);
+  for(let i=0;i<route.points.length-1;i++){
+   const a=xy(route.points[i]),b=xy(route.points[i+1]);
+   const vx=b.x-a.x,vy=b.y-a.y,length2=vx*vx+vy*vy;
+   if(length2<.01)continue;
+   const fraction=Math.max(0,Math.min(1,((point.x-a.x)*vx+(point.y-a.y)*vy)/length2));
+   const nearestX=a.x+fraction*vx,nearestY=a.y+fraction*vy;
+   const distance=Math.hypot(point.x-nearestX,point.y-nearestY);
+   const segmentLength=route.cumulative[i+1]-route.cumulative[i];
+   const travelled=route.cumulative[i]+segmentLength*fraction;
+   if(!best||distance<best.distanceMeters)best={routeName:route.name,distanceMeters:distance,travelledMeters:travelled,remainingMeters:Math.max(0,route.totalMeters-travelled),routeLengthMeters:route.totalMeters,progressPercent:Math.max(0,Math.min(100,Math.round(travelled/route.totalMeters*100)))};
+  }
+ });
+ if(!best)return null;
+ best.offRoute=best.distanceMeters>350;
+ return best;
+}
 function popupHtml(o){
  const category=definitions[o.tipo]?.label||'Punto de interés';
  const description=String(o.descripcion||'').trim();
@@ -179,7 +228,7 @@ function popupHtml(o){
   (details?'<p><span class="popup-label">Detalles:</span> '+esc(details).replace(/\n/g,'<br>')+'</p>':'')+
   '<p class="popup-label">5K INJU–MIDES Florida 2026</p></div>';
 }
-function render(items){items=(items||[]).filter(o=>o.visible!==false);Object.values(groups).forEach(g=>g.clearLayers());routeArrowConfigs=[];document.getElementById('layers').innerHTML='';layerItems.length=0;
+function render(items){items=(items||[]).filter(o=>o.visible!==false);publicRoutes=buildPublicRoutes(items);Object.values(groups).forEach(g=>g.clearLayers());routeArrowConfigs=[];document.getElementById('layers').innerHTML='';layerItems.length=0;
  const bounds=[];
  items.forEach((o,i)=>{const g=groups[o.tipo]||groups.otros;let feature=null;
  if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){
@@ -320,11 +369,26 @@ function renderLiveRunners(items){
  let count=0;
  (items||[]).forEach(item=>{
   if(!Number.isFinite(Number(item.lat))||!Number.isFinite(Number(item.lng)))return;
-  const marker=L.marker([Number(item.lat),Number(item.lng)],{icon:L.divIcon({className:'runner-map-icon',html:'<span></span>',iconSize:[26,26],iconAnchor:[13,13]})});
+  const latitude=Number(item.lat),longitude=Number(item.lng);
+  const marker=L.marker([latitude,longitude],{icon:L.divIcon({className:'runner-map-icon',html:'<span></span>',iconSize:[26,26],iconAnchor:[13,13]})});
   const accuracy=item.accuracy?'<p>Precisión GPS aproximada: '+esc(Math.round(Number(item.accuracy)))+' m</p>':'';
-  marker.bindPopup('<div class="popup-title">Corredor: '+esc(item.alias||'Sin alias')+'</div><div class="popup-info"><p>Última actualización: hace '+esc(item.ageSeconds||0)+' s</p>'+accuracy+'</div>');
+  const progress=estimateRunnerProgress(latitude,longitude);
+  let progressHtml='';
+  let tooltipText=item.alias||'Corredor';
+  if(progress&&!progress.offRoute){
+   progressHtml='<p><strong>Distancia recorrida estimada:</strong> '+formatDistanceMeters(progress.travelledMeters)+'</p>'+
+    '<p><strong>Distancia restante estimada:</strong> '+formatDistanceMeters(progress.remainingMeters)+'</p>'+
+    '<p><strong>Avance:</strong> '+progress.progressPercent+'% · recorrido '+esc(progress.routeName)+'</p>'+
+    '<p><strong>Separación GPS de la ruta:</strong> '+formatDistanceMeters(progress.distanceMeters)+'</p>';
+   tooltipText+=' · '+formatDistanceMeters(progress.travelledMeters)+' recorridos';
+  }else if(progress){
+   progressHtml='<p><strong>Avance no calculado:</strong> la posición está a '+formatDistanceMeters(progress.distanceMeters)+' del recorrido. Cuando el GPS se acerque a la ruta se mostrarán las distancias estimadas.</p>';
+  }else{
+   progressHtml='<p>Las distancias estarán disponibles cuando haya un recorrido publicado en el mapa.</p>';
+  }
+  marker.bindPopup('<div class="popup-title">Corredor: '+esc(item.alias||'Sin alias')+'</div><div class="popup-info">'+progressHtml+'<p>Última actualización: hace '+esc(item.ageSeconds||0)+' s</p>'+accuracy+'</div>',{maxWidth:300});
   marker.on('click',()=>map.flyTo(marker.getLatLng(),Math.max(map.getZoom(),18),{duration:.45}));
-  marker.bindTooltip(esc(item.alias||'Corredor'),{direction:'top',offset:[0,-12],className:'runner-tooltip'});
+  marker.bindTooltip(esc(tooltipText),{direction:'top',offset:[0,-12],className:'runner-tooltip'});
   liveRunnersLayer.addLayer(marker);count++;
  });
  document.getElementById('gpsMapStatus').textContent=count?count+' corredor(es) compartiendo ubicación ahora.':'No hay ubicaciones compartidas recientes.';
