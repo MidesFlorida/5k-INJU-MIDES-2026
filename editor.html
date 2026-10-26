@@ -12,6 +12,8 @@
 @media(max-width:520px){.app{grid-template-rows:38dvh 62dvh}.title{font-size:16px}.subtitle{font-size:10px}.type{font-size:9px}.geometry{font-size:9px}.toolbar{gap:6px}.instructions{font-size:9.5px}.modal-card{padding:16px}.status-badge{font-size:9px}}
 @media(orientation:landscape) and (max-width:900px){.app{grid-template-columns:minmax(250px,36vw) minmax(0,1fr);grid-template-rows:100dvh}.app>aside{grid-column:1;grid-row:1;height:100dvh;max-height:100dvh;overflow-y:auto}.main{grid-column:2;grid-row:1;height:100dvh}.status-badge{top:60px;right:8px;left:auto;max-width:calc(64vw - 24px)}.legend{max-width:48vw;max-height:30vh}}
 @media(min-width:901px) and (max-width:1200px){.app{grid-template-columns:315px minmax(0,1fr)}}
+.race-control{padding:11px;background:#f0f6fb;border:1px solid #cdddea;border-radius:10px;display:grid;gap:9px}.race-control-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.race-control-title{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#58738b}.race-clock{font-size:clamp(1.65rem,3vw,2.2rem);line-height:1.1;font-weight:950;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:#073568}.race-state{font-size:10px;font-weight:850;text-align:right;color:#17683d}.race-control-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.race-control .btn{font-size:11px;min-height:40px}.race-control .btn:disabled{opacity:.4}.race-help{margin:0;font-size:10px;line-height:1.4;color:#5e758a}
+@media(max-width:900px){.race-control{padding:9px}.race-control-buttons{gap:6px}.race-control .btn{min-height:42px}}
 </style>
 </head>
 <body>
@@ -19,6 +21,11 @@
 <aside>
 <header class="sidehead"><div class="design-logos" aria-label="Logos MIDES y 5K, sin tarjetas de fondo"><img src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO%202%20TINTAS%20BLANCO%20Y%20AMARILLO.png" alt="MIDES Uruguay · logo blanco y amarillo" loading="eager"><img class="logo-5k" src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO_5k_florida-2026.png" alt="5K INJU–MIDES Florida 2026" loading="eager"></div><div class="kicker">Panel de diseño · MIDES Florida</div><div class="title">Mapa 5K INJU–MIDES</div><div class="subtitle">Diseñá recorridos, zonas y puntos. Seleccioná una capa para editar sus vértices o su información.</div></header>
 <div class="toolbar">
+ <section class="race-control" aria-label="Control del cronómetro oficial">
+  <div class="race-control-top"><div><div class="race-control-title">Cronómetro oficial</div><div class="race-clock" id="editorRaceClock">00:00:00</div></div><div class="race-state" id="editorRaceState" role="status">Esperando salida</div></div>
+  <div class="race-control-buttons"><button type="button" class="btn primary" id="raceStart">▶ Iniciar carrera</button><button type="button" class="btn warn" id="raceFinish" disabled>■ Finalizar carrera</button></div>
+  <p class="race-help">El cronómetro se sincroniza con el mapa público. Solo el operador autorizado puede iniciarlo o finalizarlo.</p>
+ </section>
  <div class="button-grid">
   <button class="btn primary" id="start">＋ Nueva capa</button>
   <button class="btn" id="finish" disabled>Finalizar dibujo</button>
@@ -94,6 +101,7 @@ map.createPane('directionArrows');map.getPane('directionArrows').style.zIndex=76
 map.createPane('vertexHandles');map.getPane('vertexHandles').style.zIndex=900;
 const featureGroup=L.featureGroup().addTo(map),previewGroup=L.layerGroup().addTo(map),vertexGroup=L.layerGroup().addTo(map);
 let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
+let raceState={state:'ESPERA',startAt:null,finishAt:null},raceControlBusy=false;
 const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
 function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
 function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
@@ -244,14 +252,14 @@ function jsonp(url,successMessage,failureMessage,onSuccess){
   const cb='map5kCb'+Date.now()+'_'+(++requestCounter);
   let script=null,timer=null,done=false;
   function cleanup(){if(done)return;done=true;if(timer)clearTimeout(timer);if(script)script.remove();try{delete window[cb];}catch(_){window[cb]=undefined;}}
-  function fail(message){cleanup();setStatus(message,true);reject(new Error(message));}
+  function fail(message){cleanup();if(failureMessage)setStatus(message,true);reject(new Error(message));}
   window[cb]=function(res){
    if(!res||typeof res.ok!=='boolean'){fail('La API respondió en un formato inesperado. Revisá la implementación web de Apps Script.');return;}
    if(res.apiVersion&&!String(res.apiVersion).includes(API_VERSION_PREFIX)){fail('La API activa no corresponde a la versión del mapa 5K. Actualizá Code.gs y publicá una nueva versión de la implementación web.');return;}
    if(!res.ok){fail((failureMessage||'La operación no se completó.')+(res.error?' '+res.error:''));return;}
    cleanup();
    try{if(onSuccess)onSuccess(res);}catch(e){setStatus('La operación respondió correctamente, pero no se pudo actualizar la pantalla.',true);}
-   setStatus(successMessage+(res.apiVersion?' · API '+res.apiVersion:''),false);resolve(res);
+   if(successMessage)setStatus(successMessage+(res.apiVersion?' · API '+res.apiVersion:''),false);resolve(res);
   };
   script=document.createElement('script');script.async=true;
   script.onerror=function(){fail('No se pudo conectar con Google Apps Script. Verificá la URL /exec, la implementación y sus permisos.');};
@@ -260,6 +268,39 @@ function jsonp(url,successMessage,failureMessage,onSuccess){
   script.src=url+separator+'callback='+encodeURIComponent(cb)+'&_='+Date.now();
   document.head.appendChild(script);
  });
+}
+function formatRaceElapsed(ms){const n=Math.max(0,Math.floor(ms/1000));return [Math.floor(n/3600),Math.floor((n%3600)/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');}
+function drawEditorRaceClock(){
+ const status=raceState.state||'ESPERA';let elapsed=0,label='Esperando salida';
+ if(status==='EN_CURSO'&&raceState.startAt){elapsed=Date.now()-raceState.startAt;label='CARRERA EN CURSO';}
+ else if(status==='FINALIZADA'&&raceState.startAt&&raceState.finishAt){elapsed=raceState.finishAt-raceState.startAt;label='CARRERA FINALIZADA';}
+ $('editorRaceClock').textContent=formatRaceElapsed(elapsed);$('editorRaceState').textContent=label;
+ $('editorRaceState').style.color=status==='EN_CURSO'?'#17683d':status==='FINALIZADA'?'#64758a':'#8a650e';
+ $('raceStart').disabled=!API_URL||raceControlBusy||status==='EN_CURSO';
+ $('raceFinish').disabled=!API_URL||raceControlBusy||status!=='EN_CURSO';
+}
+function refreshRaceState(){
+ if(!API_URL)return;
+ jsonp(API_URL+'?action=mapa5kCarreraEstado','', '',function(res){
+  raceState={state:res.state||'ESPERA',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null};
+  drawEditorRaceClock();
+ }).catch(()=>{});
+}
+async function controlRace(action){
+ if(!API_URL){setStatus('Falta conectar la API propia de la 5K en api-config.js.',true);return;}
+ if(!ensureAdminKey())return;
+ if(action==='mapa5kCarreraFinalizar'&&raceState.state!=='EN_CURSO'){setStatus('La carrera no está en curso.',true);return;}
+ if(action==='mapa5kCarreraFinalizar'&&!confirm('¿Confirmás finalizar el cronómetro oficial de la carrera?'))return;
+ if(action==='mapa5kCarreraIniciar'&&raceState.state==='FINALIZADA'&&!confirm('El cronómetro anterior está finalizado. ¿Querés iniciar una nueva medición desde cero?'))return;
+ raceControlBusy=true;drawEditorRaceClock();
+ const payload=encodeURIComponent(JSON.stringify({key:adminKey}));
+ const success=action==='mapa5kCarreraIniciar'?'Cronómetro oficial iniciado.':'Cronómetro oficial finalizado.';
+ try{
+  await jsonp(API_URL+'?action='+action+'&data='+payload,success,'No se pudo cambiar el cronómetro.',function(res){
+   raceState={state:res.state||'ESPERA',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null};
+  });
+ }catch(_){}
+ finally{raceControlBusy=false;drawEditorRaceClock();}
 }
 function persistRecord(o,successMessage){
  if(!API_URL){const message='Falta configurar la API independiente del mapa 5K. Publicá apps-script/Code.gs y pegá la URL en api-config.js.';setStatus(message,true);return Promise.reject(new Error(message));}
@@ -408,6 +449,9 @@ $('initSheet').onclick=async()=>{
   await loadRecords();
  }catch(_){}
 };
+$('raceStart').addEventListener('click',()=>controlRace('mapa5kCarreraIniciar'));
+$('raceFinish').addEventListener('click',()=>controlRace('mapa5kCarreraFinalizar'));
+refreshRaceState();setInterval(refreshRaceState,15000);setInterval(drawEditorRaceClock,250);drawEditorRaceClock();
 $('logout').onclick=()=>{if(drawing&&!confirm('Hay un dibujo en curso sin guardar. ¿Querés salir y descartarlo?'))return;if(editingId&&dirty&&!confirm('Hay cambios de geometría sin guardar. ¿Querés salir y descartarlos?'))return;adminKey='';location.href='index.html';};
 window.addEventListener('resize',()=>setTimeout(()=>map.invalidateSize(true),100));
 window.addEventListener('orientationchange',()=>setTimeout(()=>map.invalidateSize(true),350));
