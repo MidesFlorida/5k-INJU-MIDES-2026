@@ -94,6 +94,7 @@ let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,dra
 const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
 function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
 function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+function ensureAdminKey(){if(adminKey)return true;adminKey=prompt('Clave de edición del mapa 5K:')||'';if(!adminKey){setStatus('Para editar y guardar necesitás ingresar la clave de edición.',true);return false;}return true;}
 function activeRecord(){return records.find(r=>String(r.id)===String(selectedId))||null;}
 function minPoints(g){return g==='punto'?1:(g==='poligono'?3:2);}
 function currentPoints(){return editingId?editPoints:draftPoints;}
@@ -239,7 +240,7 @@ function jsonp(url,successMessage,failureMessage,onSuccess){
  });
 }
 function persistRecord(o,successMessage){
- if(!adminKey){setStatus('No hay clave de edición. Cerrá y volvé a ingresar al editor.',true);return Promise.reject(new Error('Falta clave de edición'));}
+ if(!ensureAdminKey())return Promise.reject(new Error('Falta clave de edición'));
  const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[payloadForRecord(o)]}));
  return jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado en Google Sheets: '+o.nombre),'No se pudo guardar en Google Sheets.',function(){});
 }
@@ -255,7 +256,7 @@ async function saveRecordAndConfirm(o,success){
 }
 function startDrawing(){
  if(drawing||editingId)return;
- if(!adminKey){setStatus('Ingresá la clave de edición para comenzar.',true);return;}
+ if(!ensureAdminKey())return;
  drawing=true;draftPoints=[];pendingFeature=null;
  const selected=activeRecord();
  if(selected){selectedId=null;}
