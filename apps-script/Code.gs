@@ -37,8 +37,8 @@ function doGet(e) {
       result = {ok:true, items:mapa5kList_()};
     } else if (action === 'mapa5kSave') {
       const payload = JSON.parse(String(p.data || '{}'));
-      const configuredKey = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
-      const suppliedKey = String(payload.key || '');
+      const configuredKey = String(PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '').trim();
+      const suppliedKey = String(payload.key || '').trim();
       if (!configuredKey) throw new Error('Falta configurar la propiedad ADMIN_KEY en el proyecto Apps Script.');
       if (suppliedKey !== configuredKey) throw new Error('Clave de edición incorrecta.');
       result = {ok:true, items:mapa5kSave_(payload.items || [])};
