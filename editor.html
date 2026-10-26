@@ -79,7 +79,7 @@
 (function(){
 'use strict';
 const API_URL=(window.MAPA5K_API_URL||'').trim();
-const API_VERSION_PREFIX='2026-10-26-mapa5k-v7';
+const API_VERSION_PREFIXES=['2026-10-23-mapa5k-v','2026-10-26-mapa5k-v'];
 const MAPA5K_SPREADSHEET_ID='1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
 const $=id=>document.getElementById(id);
 const categoryDefs={
@@ -250,7 +250,7 @@ function jsonp(url,successMessage,failureMessage,onSuccess){
   function fail(message){cleanup();if(failureMessage)setStatus(message,true);reject(new Error(message));}
   window[cb]=function(res){
    if(!res||typeof res.ok!=='boolean'){fail('La API respondió en un formato inesperado. Revisá la implementación web de Apps Script.');return;}
-   if(res.apiVersion&&!String(res.apiVersion).includes(API_VERSION_PREFIX)){fail('La API activa no corresponde a la versión del mapa 5K. Actualizá Code.gs y publicá una nueva versión de la implementación web.');return;}
+   if(res.apiVersion&&!API_VERSION_PREFIXES.some(prefix=>String(res.apiVersion).startsWith(prefix))){fail('La API activa no corresponde a la versión del mapa 5K. Actualizá Code.gs y publicá una nueva versión de la implementación web.');return;}
    if(!res.ok){fail((failureMessage||'La operación no se completó.')+(res.error?' '+res.error:''));return;}
    cleanup();
    try{if(onSuccess)onSuccess(res);}catch(e){setStatus('La operación respondió correctamente, pero no se pudo actualizar la pantalla.',true);}
