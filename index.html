@@ -36,6 +36,28 @@ header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;pa
 @media(max-width:430px){.intro-logos{gap:10px}.intro-logo-card{width:clamp(120px,39vw,165px);height:clamp(120px,39vw,165px);border-radius:12px;padding:4px}.intro-mides-logo{transform:scale(1.23)}.intro-plus{font-size:1.05rem}.intro-kicker{letter-spacing:.12em}}
 @media(prefers-reduced-motion:reduce){#intro-5k,.intro-inner,.intro-kicker,.intro-logo-card,.intro-plus,.intro-progress span{animation:none!important;transition:none!important}}
 
+/* Panel de carrera y seguimiento GPS voluntario */
+.live-tools{display:grid;grid-template-columns:minmax(230px,.78fr) minmax(320px,1.22fr);gap:14px;padding:14px 14px 0}
+.live-card{background:#fff;border:1px solid #dbe4ee;border-radius:15px;padding:16px 19px;box-shadow:0 5px 18px #14375a0a;min-width:0}
+.live-kicker{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:850;color:#54718e}
+.live-clock{font-size:clamp(2.1rem,4.5vw,3.2rem);line-height:1.1;font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:.04em;color:var(--navy);margin:8px 0}
+.live-state{display:inline-flex;padding:5px 10px;border-radius:999px;background:#edf3f8;color:#274966;font-size:.8rem;font-weight:800}
+.clock-card p,.gps-card p{color:var(--muted);font-size:.82rem;margin:10px 0 0;line-height:1.45}
+.gps-card label{display:block;margin-top:10px;margin-bottom:5px;font-size:.8rem;font-weight:800;color:#29445e}
+.gps-card input{width:100%;max-width:360px;border:1px solid #c7d5e2;border-radius:9px;padding:10px 12px;font:inherit;font-size:.92rem}
+.gps-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.gps-buttons button{min-height:42px;border-radius:9px;padding:10px 14px;font-size:.84rem;font-weight:850}
+.gps-start{background:#08723d;color:white}.gps-start:hover{background:#075a31}
+.gps-stop{background:#f8fafc;color:#6d3440;border:1px solid #e0cbd0}.gps-stop:disabled{opacity:.45;cursor:not-allowed}
+.gps-status{margin-top:9px;font-size:.8rem;font-weight:750;color:#34546f;overflow-wrap:anywhere}
+.gps-count{margin-top:4px;font-size:.75rem;color:var(--muted)}
+.runner-map-icon{background:transparent;border:0}
+.runner-map-icon span{display:block;width:18px;height:18px;border-radius:50%;background:#08a45b;border:3px solid #fff;box-shadow:0 0 0 4px #08a45b42,0 2px 7px #102c4566}
+.runner-tooltip{background:#073568;color:#fff;border:0;border-radius:6px;padding:3px 7px;font-weight:800;box-shadow:0 2px 7px #001b3c33}
+.runner-tooltip:before{border-top-color:#073568}
+@media(max-width:850px){.live-tools{grid-template-columns:1fr;padding:10px 8px 0;gap:8px}.live-card{padding:14px 15px}.gps-card input{max-width:none}.live-clock{font-size:clamp(2rem,8vw,2.7rem)}}
+@media(max-width:480px){.live-tools{padding:8px 8px 0}.live-card{border-radius:12px;padding:13px}.gps-buttons{display:grid;grid-template-columns:1fr 1fr}.gps-buttons button{padding:10px 8px;font-size:.78rem}.layout{min-height:0}.mapbox{min-height:340px}#map{height:62vh;min-height:340px;max-height:620px}.panelhead{padding:13px}.header-logos{gap:14px}}
+@media(prefers-reduced-motion:reduce){.runner-map-icon span{box-shadow:0 0 0 2px #08a45b42}}
 </style>
 </head>
 <body>
@@ -57,7 +79,23 @@ header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;pa
 
 <header><div class="top"><div><div class="eyebrow">MIDES FLORIDA · INJU</div><h1 class="title">5K · La violencia no corre más</h1><p class="sub">Mapa público del evento · Florida, Uruguay</p></div><div class="header-logos" aria-label="Identidad institucional y del evento"><img src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO%202%20TINTAS%20BLANCO%20Y%20AMARILLO.png" alt="MIDES Uruguay · logo blanco y amarillo" loading="eager"><img class="logo-5k" src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO_5k_florida-2026.png" alt="5K INJU–MIDES Florida 2026" loading="eager"></div><div class="actions"><a class="btn" href="editor.html">Acceso al diseño</a></div></div></header>
 <section class="signup-wrap" aria-labelledby="signup-title"><div class="signup-card"><div class="signup-copy"><div class="signup-icon" aria-hidden="true">🏃</div><div><h2 id="signup-title">¡Sumate a la 5K!</h2><p>Inscribite en línea y sé parte de la iniciativa <strong>La violencia no corre más</strong>.</p><div class="signup-note">Formulario oficial de inscripción · MIDES</div></div></div><a class="signup-btn" href="https://formularios.mides.gub.uy/228484/" target="_blank" rel="noopener noreferrer">Inscribirme ahora <span aria-hidden="true">↗</span></a></div></section>
-<main class="layout"><aside><div class="panelhead"><span class="status">● INFORMACIÓN PÚBLICA</span><h2>Referencias del evento</h2><p>Activá o desactivá las capas para consultar el recorrido, el escenario, los puestos y las áreas de la feria social. Tocá cada elemento del mapa para ver su descripción.</p></div><div id="layers" class="layers"><div class="empty">Cargando información del mapa…</div></div><div class="legend"><b>Cómo usar el mapa</b><br>Acercá o alej á el mapa con los controles o los gestos de tu dispositivo. Seleccioná una línea, un marcador o un área para ver los detalles.</div></aside><section class="mapbox"><div class="maphead"><strong>Mapa interactivo del evento</strong><span id="status">Conectando con la información del evento…</span></div><div id="map" role="application" aria-label="Mapa interactivo del evento 5K"></div></section></main><footer>5K INJU–MIDES Florida · Viernes 30 de octubre de 2026 · Plaza Artigas</footer>
+<section class="live-tools" aria-label="Cronómetro y ubicación de corredores">
+ <article class="live-card clock-card">
+  <div class="live-kicker">Cronómetro oficial</div>
+  <div class="live-clock" id="publicRaceClock" aria-live="off">00:00:00</div>
+  <div class="live-state" id="publicRaceState" role="status">Esperando la salida</div>
+  <p>El tiempo oficial se comparte con todas las personas que consultan el mapa.</p>
+ </article>
+ <article class="live-card gps-card">
+  <div class="live-kicker">Ubicación voluntaria de corredores</div>
+  <p>Podés compartir tu posición GPS para que se vea en el mapa público. Usá un dorsal o alias, no incluyas información personal. Podés dejar de compartir cuando quieras.</p>
+  <label for="runnerAlias">Dorsal o alias público</label>
+  <input id="runnerAlias" maxlength="32" autocomplete="off" placeholder="Ej. Dorsal 24">
+  <div class="gps-buttons"><button type="button" class="gps-start" id="startGps">Compartir mi ubicación</button><button type="button" class="gps-stop" id="stopGps" disabled>Dejar de compartir</button></div>
+  <div class="gps-status" id="gpsShareStatus" role="status">La ubicación está desactivada.</div>
+  <div class="gps-count" id="gpsMapStatus">No hay ubicaciones compartidas recientes.</div>
+ </article>
+</section><main class="layout"><aside><div class="panelhead"><span class="status">● INFORMACIÓN PÚBLICA</span><h2>Referencias del evento</h2><p>Activá o desactivá las capas para consultar el recorrido, el escenario, los puestos y las áreas de la feria social. Tocá cada elemento del mapa para ver su descripción.</p></div><div id="layers" class="layers"><div class="empty">Cargando información del mapa…</div></div><div class="legend"><b>Cómo usar el mapa</b><br>Acercá o alej á el mapa con los controles o los gestos de tu dispositivo. Seleccioná una línea, un marcador o un área para ver los detalles.</div></aside><section class="mapbox"><div class="maphead"><strong>Mapa interactivo del evento</strong><span id="status">Conectando con la información del evento…</span></div><div id="map" role="application" aria-label="Mapa interactivo del evento 5K"></div></section></main><footer>5K INJU–MIDES Florida · Viernes 30 de octubre de 2026 · Plaza Artigas</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.js"></script>
 <script src="api-config.js"></script>
 <script>
@@ -65,7 +103,9 @@ const API_URL=(window.MAPA5K_API_URL||'').trim();
 const map=L.map('map').setView([-34.0958,-56.2142],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
 const groups={ruta:L.layerGroup().addTo(map),escenario:L.layerGroup().addTo(map),hidratacion:L.layerGroup().addTo(map),feria:L.layerGroup().addTo(map),otros:L.layerGroup().addTo(map)};
+const liveRunnersLayer=L.layerGroup().addTo(map);
 let routeArrowConfigs=[];
+let runnerLayerVisible=true;
 const definitions={ruta:{label:'Recorrido de la 5K',color:'#e53935'},escenario:{label:'Escenario',color:'#7c3aed'},hidratacion:{label:'Puestos de hidratación',color:'#0891b2'},feria:{label:'Feria social y zonas',color:'#16834a'},otros:{label:'Otros puntos de referencia',color:'#d97706'}};
 const layerItems=[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -117,12 +157,117 @@ function render(items){items=(items||[]).filter(o=>o.visible!==false);Object.val
  if(feature){feature.bindPopup(popupHtml(o),{maxWidth:290,minWidth:190,closeButton:true,autoPan:true});feature.addTo(g);if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){const config=routeArrowConfigs[routeArrowConfigs.length-1];if(config&&!config.group)config.group=L.layerGroup().addTo(g);}}
  });
  Object.entries(definitions).forEach(([key,d])=>{const row=document.createElement('div');row.className='layer';row.innerHTML='<span class="swatch" style="background:'+d.color+'"></span><label for="layer-'+key+'">'+d.label+'</label><input id="layer-'+key+'" type="checkbox" checked>';const cb=row.querySelector('input');cb.addEventListener('change',()=>cb.checked?map.addLayer(groups[key]):map.removeLayer(groups[key]));document.getElementById('layers').appendChild(row)});
+ const runnerRow=document.createElement('div');runnerRow.className='layer';runnerRow.innerHTML='<span class="swatch" style="background:#08a45b"></span><label for="layer-runners">Corredores en vivo</label><input id="layer-runners" type="checkbox" checked>';runnerRow.querySelector('input').addEventListener('change',e=>{runnerLayerVisible=e.target.checked;if(runnerLayerVisible)map.addLayer(liveRunnersLayer);else map.removeLayer(liveRunnersLayer)});document.getElementById('layers').appendChild(runnerRow);
  if(bounds.length>1)map.fitBounds(bounds,{padding:[30,30],maxZoom:16});redrawRouteArrows();document.getElementById('status').textContent=items.length?items.length+' elemento(s) publicados':'Mapa disponible · esperando elementos publicados';
 }
 function load(){if(!API_URL){render([]);document.getElementById('status').textContent='Mapa base listo · falta conectar Google Sheets';return}
  const cb='midesMapCb'+Date.now();window[cb]=res=>{try{if(!res||!res.ok)throw Error('Respuesta no válida');render(res.items||[]);document.getElementById('status').textContent='Información actualizada'}catch(e){document.getElementById('status').textContent='No se pudo leer la información'}finally{delete window[cb];script.remove()}};
  const script=document.createElement('script');script.src=API_URL+'?action=mapa5kList&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
 load();setInterval(load,60000);
+
+// Cronómetro oficial sincronizado con el servidor.
+let publicRace={state:'ESPERA',startAt:null,finishAt:null};
+function formatRaceTime(ms){const total=Math.max(0,Math.floor(ms/1000));const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');}
+function drawPublicRaceClock(){
+ const time=document.getElementById('publicRaceClock'),state=document.getElementById('publicRaceState');
+ let elapsed=0,label='Esperando la salida';
+ if(publicRace.state==='EN_CURSO'&&publicRace.startAt){elapsed=Date.now()-publicRace.startAt;label='CARRERA EN CURSO';}
+ else if(publicRace.state==='FINALIZADA'&&publicRace.startAt&&publicRace.finishAt){elapsed=publicRace.finishAt-publicRace.startAt;label='CARRERA FINALIZADA';}
+ time.textContent=formatRaceTime(elapsed);state.textContent=label;
+ state.style.background=publicRace.state==='EN_CURSO'?'#e4f7ec':publicRace.state==='FINALIZADA'?'#edf3f8':'#fff6de';
+ state.style.color=publicRace.state==='EN_CURSO'?'#17683d':publicRace.state==='FINALIZADA'?'#274966':'#805c10';
+}
+function apiJsonp(action,data,onSuccess,onError){
+ if(!API_URL){if(onError)onError(new Error('La API de la 5K todavía no está configurada.'));return;}
+ const cb='mapa5kLiveCb'+Date.now()+'_'+Math.floor(Math.random()*100000);
+ let script=null,done=false;
+ const cleanup=()=>{if(done)return;done=true;if(script)script.remove();try{delete window[cb];}catch(_){window[cb]=undefined;}};
+ window[cb]=res=>{cleanup();if(!res||res.ok!==true){if(onError)onError(new Error(res&&res.error?res.error:'Respuesta no válida de la API.'));return;}if(onSuccess)onSuccess(res);};
+ script=document.createElement('script');script.async=true;
+ script.onerror=()=>{cleanup();if(onError)onError(new Error('No se pudo conectar con el servidor de la 5K.'));};
+ let url=API_URL+'?action='+encodeURIComponent(action)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();
+ if(data)url+='&data='+encodeURIComponent(JSON.stringify(data));
+ script.src=url;document.head.appendChild(script);
+}
+function refreshPublicRace(){
+ apiJsonp('mapa5kCarreraEstado',null,res=>{
+  publicRace={state:res.state||'ESPERA',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null};
+  drawPublicRaceClock();
+ },()=>{document.getElementById('publicRaceState').textContent='No se pudo sincronizar el cronómetro';});
+}
+drawPublicRaceClock();refreshPublicRace();setInterval(refreshPublicRace,15000);setInterval(drawPublicRaceClock,250);
+
+// Seguimiento GPS expresamente voluntario: el alias y la posición se muestran en el mapa público.
+function makeRunnerId(){
+ try{let id=sessionStorage.getItem('mides5k-runner-id');if(id)return id;
+  const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);
+  id=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  sessionStorage.setItem('mides5k-runner-id',id);return id;
+ }catch(_){return 'gps'+Date.now().toString(36)+Math.random().toString(36).slice(2,20);}
+}
+const runnerId=makeRunnerId();
+let trackingActive=false,trackingWatchId=null,trackingHeartbeat=null,latestPosition=null,runnerAlias='',lastGpsSend=0,gpsSending=false;
+function setGpsShareStatus(message,isError){const el=document.getElementById('gpsShareStatus');el.textContent=message;el.style.color=isError?'#a51d2d':'#34546f';}
+function renderLiveRunners(items){
+ liveRunnersLayer.clearLayers();
+ let count=0;
+ (items||[]).forEach(item=>{
+  if(!Number.isFinite(Number(item.lat))||!Number.isFinite(Number(item.lng)))return;
+  const marker=L.marker([Number(item.lat),Number(item.lng)],{icon:L.divIcon({className:'runner-map-icon',html:'<span></span>',iconSize:[26,26],iconAnchor:[13,13]})});
+  const accuracy=item.accuracy?'<p>Precisión GPS aproximada: '+esc(Math.round(Number(item.accuracy)))+' m</p>':'';
+  marker.bindPopup('<div class="popup-title">Corredor: '+esc(item.alias||'Sin alias')+'</div><div class="popup-info"><p>Última actualización: hace '+esc(item.ageSeconds||0)+' s</p>'+accuracy+'</div>');
+  marker.bindTooltip(esc(item.alias||'Corredor'),{direction:'top',offset:[0,-12],className:'runner-tooltip'});
+  liveRunnersLayer.addLayer(marker);count++;
+ });
+ document.getElementById('gpsMapStatus').textContent=count?count+' corredor(es) compartiendo ubicación ahora.':'No hay ubicaciones compartidas recientes.';
+}
+function refreshRunnerPositions(){
+ apiJsonp('mapa5kGpsList',null,res=>renderLiveRunners(res.items||[]),err=>{
+  document.getElementById('gpsMapStatus').textContent='No se pudo actualizar la ubicación de los corredores.';
+ });
+}
+refreshRunnerPositions();setInterval(refreshRunnerPositions,12000);
+function sendMyGpsPosition(){
+ if(!trackingActive||!latestPosition||gpsSending)return;
+ const now=Date.now();if(now-lastGpsSend<11000)return;
+ gpsSending=true;
+ const payload={id:runnerId,alias:runnerAlias,lat:latestPosition.coords.latitude,lng:latestPosition.coords.longitude,accuracy:latestPosition.coords.accuracy};
+ apiJsonp('mapa5kGpsActualizar',payload,res=>{
+  lastGpsSend=Date.now();gpsSending=false;
+  setGpsShareStatus('Ubicación compartida en el mapa público. El teléfono debe permanecer con esta página abierta.',false);
+  refreshRunnerPositions();
+ },err=>{
+  gpsSending=false;
+  setGpsShareStatus('No se pudo publicar tu posición. Verificá la conexión e intentá nuevamente.',true);
+ });
+}
+function stopGpsTracking(sendStop){
+ trackingActive=false;
+ if(trackingWatchId!==null&&navigator.geolocation){navigator.geolocation.clearWatch(trackingWatchId);trackingWatchId=null;}
+ if(trackingHeartbeat){clearInterval(trackingHeartbeat);trackingHeartbeat=null;}
+ document.getElementById('startGps').disabled=false;document.getElementById('stopGps').disabled=true;
+ if(sendStop&&API_URL)apiJsonp('mapa5kGpsDetener',{id:runnerId},()=>{setGpsShareStatus('Dejaste de compartir tu ubicación.',false);refreshRunnerPositions();},()=>setGpsShareStatus('Seguimiento detenido en este teléfono. La última posición desaparecerá automáticamente en unos segundos.',false));
+ else setGpsShareStatus('La ubicación está desactivada.',false);
+}
+document.getElementById('startGps').addEventListener('click',()=>{
+ const input=document.getElementById('runnerAlias');runnerAlias=input.value.trim().slice(0,32);
+ if(!runnerAlias){input.focus();setGpsShareStatus('Ingresá tu dorsal o un alias público para identificar el marcador.',true);return;}
+ if(!navigator.geolocation){setGpsShareStatus('Este dispositivo o navegador no permite acceder al GPS.',true);return;}
+ if(!API_URL){setGpsShareStatus('El servidor de seguimiento todavía no está actualizado. Probá más adelante.',true);return;}
+ if(!confirm('Tu posición GPS y el alias elegido se mostrarán en el mapa público mientras compartas. No uses tu nombre completo ni datos personales. ¿Querés activar el seguimiento?'))return;
+ trackingActive=true;lastGpsSend=0;latestPosition=null;
+ document.getElementById('startGps').disabled=true;document.getElementById('stopGps').disabled=false;
+ setGpsShareStatus('Solicitando permiso de ubicación GPS…',false);
+ trackingWatchId=navigator.geolocation.watchPosition(position=>{
+  if(!trackingActive)return;latestPosition=position;sendMyGpsPosition();
+ },error=>{
+  if(!trackingActive)return;
+  if(error.code===error.PERMISSION_DENIED){stopGpsTracking(false);setGpsShareStatus('No se concedió permiso para acceder al GPS. La ubicación no se comparte.',true);}
+  else setGpsShareStatus('Esperando una señal GPS válida… Mantené la página abierta y revisá los permisos del teléfono.',true);
+ },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+ trackingHeartbeat=setInterval(sendMyGpsPosition,15000);
+});
+document.getElementById('stopGps').addEventListener('click',()=>stopGpsTracking(true));
 </script>
 <script>
 (function(){
