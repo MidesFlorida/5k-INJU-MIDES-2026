@@ -143,6 +143,26 @@ function redrawRouteArrows(){
  });
 }
 map.on('zoomend moveend',redrawRouteArrows);
+function zoomToSelectedFeature(feature,geometry){
+ if(!feature)return;
+ if(geometry==='punto'&&typeof feature.getLatLng==='function'){
+  map.flyTo(feature.getLatLng(),Math.max(map.getZoom(),18),{duration:.45});
+  return;
+ }
+ if(typeof feature.getBounds==='function'){
+  const bounds=feature.getBounds();
+  if(bounds&&typeof bounds.isValid==='function'&&bounds.isValid()){
+   map.flyToBounds(bounds,{padding:[48,48],maxZoom:17,duration:.45});
+   return;
+  }
+ }
+ if(typeof feature.getLatLng==='function')map.flyTo(feature.getLatLng(),Math.max(map.getZoom(),18),{duration:.45});
+}
+function zoomToRoutePoints(latlngs){
+ if(!latlngs||!latlngs.length)return;
+ const bounds=L.latLngBounds(latlngs);
+ if(bounds.isValid())map.flyToBounds(bounds,{padding:[48,48],maxZoom:17,duration:.45});
+}
 function popupHtml(o){
  const category=definitions[o.tipo]?.label||'Punto de interés';
  const description=String(o.descripcion||'').trim();
@@ -163,14 +183,14 @@ function render(items){items=(items||[]).filter(o=>o.visible!==false);Object.val
   feature=L.polyline(latlngs,{color:color,weight:5,opacity:.95,lineCap:'round',lineJoin:'round'});
   // Línea transparente más ancha: facilita tocar el recorrido en pantallas móviles.
   const hitArea=L.polyline(latlngs,{color:color,weight:18,opacity:0.01,interactive:true});
-  hitArea.bindPopup(popupHtml(o),{maxWidth:290,minWidth:190});hitArea.addTo(g);
+  hitArea.bindPopup(popupHtml(o),{maxWidth:290,minWidth:190});hitArea.on('click',()=>zoomToRoutePoints(latlngs));hitArea.addTo(g);
   const arrowColor=/^#[0-9a-f]{3,8}$/i.test(String(color||''))?String(color):'#0756a4';
   routeArrowConfigs.push({points:latlngs,color:arrowColor,group:null});
   o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]));
  }
  else if(o.geometria==='poligono'&&Array.isArray(o.puntos)&&o.puntos.length>2){feature=L.polygon(o.puntos.map(p=>[+p.lat,+p.lng]),{color:o.color||definitions[o.tipo]?.color||'#16834a',weight:3,fillColor:o.color||definitions[o.tipo]?.color||'#16834a',fillOpacity:.28,interactive:true});o.puntos.forEach(p=>bounds.push([+p.lat,+p.lng]))}
  else if(Array.isArray(o.puntos)&&o.puntos.length){feature=L.marker([+o.puntos[0].lat,+o.puntos[0].lng]);bounds.push([+o.puntos[0].lat,+o.puntos[0].lng])}
- if(feature){feature.bindPopup(popupHtml(o),{maxWidth:290,minWidth:190,closeButton:true,autoPan:true});feature.addTo(g);if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){const config=routeArrowConfigs[routeArrowConfigs.length-1];if(config&&!config.group)config.group=L.layerGroup().addTo(g);}}
+ if(feature){feature.bindPopup(popupHtml(o),{maxWidth:290,minWidth:190,closeButton:true,autoPan:true});feature.on('click',()=>zoomToSelectedFeature(feature,o.geometria));feature.addTo(g);if(o.geometria==='ruta'&&Array.isArray(o.puntos)&&o.puntos.length>1){const config=routeArrowConfigs[routeArrowConfigs.length-1];if(config&&!config.group)config.group=L.layerGroup().addTo(g);}}
  });
  Object.entries(definitions).forEach(([key,d])=>{const row=document.createElement('div');row.className='layer';row.innerHTML='<span class="swatch" style="background:'+d.color+'"></span><label for="layer-'+key+'">'+d.label+'</label><input id="layer-'+key+'" type="checkbox" checked>';const cb=row.querySelector('input');cb.addEventListener('change',()=>cb.checked?map.addLayer(groups[key]):map.removeLayer(groups[key]));document.getElementById('layers').appendChild(row)});
  const runnerRow=document.createElement('div');runnerRow.className='layer';runnerRow.innerHTML='<span class="swatch" style="background:#08a45b"></span><label for="layer-runners">Corredores en vivo</label><input id="layer-runners" type="checkbox" checked>';runnerRow.querySelector('input').addEventListener('change',e=>{runnerLayerVisible=e.target.checked;if(runnerLayerVisible)map.addLayer(liveRunnersLayer);else map.removeLayer(liveRunnersLayer)});document.getElementById('layers').appendChild(runnerRow);
@@ -280,6 +300,7 @@ function renderLiveRunners(items){
   const marker=L.marker([Number(item.lat),Number(item.lng)],{icon:L.divIcon({className:'runner-map-icon',html:'<span></span>',iconSize:[26,26],iconAnchor:[13,13]})});
   const accuracy=item.accuracy?'<p>Precisión GPS aproximada: '+esc(Math.round(Number(item.accuracy)))+' m</p>':'';
   marker.bindPopup('<div class="popup-title">Corredor: '+esc(item.alias||'Sin alias')+'</div><div class="popup-info"><p>Última actualización: hace '+esc(item.ageSeconds||0)+' s</p>'+accuracy+'</div>');
+  marker.on('click',()=>map.flyTo(marker.getLatLng(),Math.max(map.getZoom(),18),{duration:.45}));
   marker.bindTooltip(esc(item.alias||'Corredor'),{direction:'top',offset:[0,-12],className:'runner-tooltip'});
   liveRunnersLayer.addLayer(marker);count++;
  });
