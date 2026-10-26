@@ -97,7 +97,6 @@ map.createPane('directionArrows');map.getPane('directionArrows').style.zIndex=76
 map.createPane('vertexHandles');map.getPane('vertexHandles').style.zIndex=900;
 const featureGroup=L.featureGroup().addTo(map),previewGroup=L.layerGroup().addTo(map),vertexGroup=L.layerGroup().addTo(map);
 let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
-let raceState={state:'ESPERA',startAt:null,finishAt:null},raceControlBusy=false;
 const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
 function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
 function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
