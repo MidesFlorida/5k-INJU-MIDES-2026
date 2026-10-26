@@ -1,69 +1,384 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diseño del mapa | 5K INJU–MIDES</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Diseño del mapa · 5K INJU–MIDES Florida</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--blue:#0756a4;--navy:#073568;--bg:#eef3f8;--ink:#18283b;--muted:#63758a}*{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--ink);background:var(--bg)}header{background:linear-gradient(120deg,var(--navy),var(--blue));color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{font-size:1.25rem;margin:3px 0}.eyebrow{font-size:.7rem;letter-spacing:.12em;font-weight:800;opacity:.8}.sub{margin:0;color:#dcecff}a,button{cursor:pointer;font-weight:750;border-radius:9px;padding:9px 12px;border:0;text-decoration:none}a{background:#fff;color:var(--navy)}button.primary{background:var(--blue);color:#fff}button.secondary{background:#eaf1f8;color:var(--navy)}button.danger{background:#fff0f0;color:#a32121}.wrap{display:grid;grid-template-columns:330px 1fr;gap:12px;padding:12px;height:calc(100vh - 80px)}aside,.mapbox{background:#fff;border:1px solid #dbe4ee;border-radius:13px;overflow:hidden;min-height:0}.panelhead{padding:14px 16px;border-bottom:1px solid #e6edf4}.panelhead h2{font-size:1rem;margin:0}.panelhead p{font-size:.83rem;color:var(--muted);margin:5px 0 0}.form{padding:14px;display:grid;gap:10px;overflow:auto;max-height:calc(100% - 66px)}label{display:block;font-size:.8rem;font-weight:800;margin-bottom:4px}input,select,textarea{width:100%;border:1px solid #cbd7e4;border-radius:8px;padding:9px;font:inherit;background:#fff;color:var(--ink)}textarea{min-height:75px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.buttons{display:flex;gap:7px;flex-wrap:wrap}.buttons button{flex:1}.hint{background:#f1f7ff;color:#335676;padding:10px;border-radius:8px;font-size:.8rem}.status{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}#map{height:100%;min-height:400px}.maphead{padding:11px 14px;border-bottom:1px solid #e6edf4;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.maphead b{font-size:.9rem}.maphead span{font-size:.8rem;color:var(--muted)}.items{border-top:1px solid #e6edf4;padding:10px 14px;max-height:145px;overflow:auto}.item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eef2f6}.item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item button{padding:5px 8px;font-size:.75rem}@media(max-width:850px){.wrap{height:auto;min-height:calc(100vh - 100px);grid-template-columns:1fr}.form{max-height:none}.mapbox{min-height:60vh;display:flex;flex-direction:column}#map{height:60vh;min-height:430px;order:2}.maphead{order:1}.items{order:3}}
-</style></head><body>
-<header><div><div class="eyebrow">PANEL DE DISEÑO · MIDES FLORIDA</div><h1>Mapa logístico · 5K INJU–MIDES 2026</h1><p class="sub">Dibujá rutas, marcadores y polígonos con ventanas emergentes informativas.</p></div><a href="index.html">Ver mapa público ↗</a></header>
-<main class="wrap"><aside><div class="panelhead"><h2>Datos del elemento</h2><p>Primero completá los datos y luego dibujá en el mapa. Seleccioná un elemento de la lista para editarlo.</p></div><form id="form" class="form">
-<div><label for="nombre">Nombre / título *</label><input id="nombre" required placeholder="Ej. Puesto de hidratación 1"></div>
-<div class="row"><div><label for="tipo">Categoría</label><select id="tipo"><option value="ruta">Recorrido 5K</option><option value="escenario">Escenario</option><option value="hidratacion">Hidratación</option><option value="feria">Feria social / zona</option><option value="otros">Otro punto</option></select></div><div><label for="geometria">Tipo de dibujo</label><select id="geometria"><option value="ruta">Ruta / línea</option><option value="poligono">Polígono / área</option><option value="punto">Marcador / punto</option></select></div></div>
-<div><label for="descripcion">Descripción para el popup público</label><textarea id="descripcion" placeholder="Información que verá la gente al tocar el elemento…"></textarea></div>
-<div><label for="horario">Horario (opcional)</label><input id="horario" placeholder="Ej. Desde las 17:30"></div>
-<div><label for="detalles">Detalles adicionales (opcional)</label><textarea id="detalles" placeholder="Instituciones, servicios, indicaciones…"></textarea></div>
-<div class="row"><div><label for="color">Color del trazado</label><input type="color" id="color" value="#0756a4"></div><div><label for="visible">Visibilidad pública</label><select id="visible"><option value="true">Publicado</option><option value="false">Oculto</option></select></div></div>
-<div class="buttons"><button type="button" class="primary" id="draw">Dibujar en el mapa</button><button type="button" class="secondary" id="cancel">Cancelar dibujo</button></div>
-<div class="buttons"><button type="button" class="primary" id="save">Guardar elemento</button><button type="button" class="secondary" id="clear">Nuevo elemento</button></div>
-<div class="buttons"><button type="button" class="danger" id="remove">Eliminar elemento seleccionado</button></div>
-<div class="buttons"><button type="button" class="secondary" id="initSheet">Preparar / verificar Google Sheets</button></div>
-<div class="hint">Para que los cambios se conserven y aparezcan al público, configurá la URL de Apps Script en el código y la clave administrativa indicada en README. Los cambios no se guardan en el almacenamiento del navegador.</div>
-<div id="status" class="status">Mapa listo. Configurá la conexión para cargar o guardar datos compartidos.</div>
-</form><div class="items" id="items"><b>Elementos del mapa</b><p class="status">Cargando…</p></div></aside>
-<section class="mapbox"><div class="maphead"><b>Área de diseño</b><span>Plaza Artigas · Florida, Uruguay</span></div><div id="map"></div></section></main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+:root{--navy:#073568;--blue:#0756a4;--ink:#172b3b;--muted:#657887;--line:#d9e2e9;--panel:#fff;--surface:#eef3f6;--soft:#f5f8fa;--green:#16834a;--red:#b42318}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;-webkit-text-size-adjust:100%;font-family:system-ui,"Segoe UI",sans-serif;color:var(--ink);background:var(--surface)}button,input,select,textarea{font:inherit}button{touch-action:manipulation;cursor:pointer}.app{height:100dvh;display:grid;grid-template-columns:355px minmax(0,1fr)}aside{height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#aab8c3 #eef3f6}aside::-webkit-scrollbar{width:9px}aside::-webkit-scrollbar-thumb{background:#aab8c3;border:2px solid #eef3f6;border-radius:8px}aside>header,aside>.toolbar,aside>.footer{flex:0 0 auto}.sidehead{padding:17px 18px;border-bottom:1px solid var(--line)}.kicker,.section-title,.type-title{font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:#788894}.title{font-size:20px;line-height:1.2;font-weight:850;margin:5px 0}.subtitle,.help,.status-line{font-size:11px;line-height:1.45;color:var(--muted)}.toolbar{padding:12px;border-bottom:1px solid var(--line);display:grid;gap:10px}.btn{min-height:36px;padding:8px 10px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;font-size:11px;font-weight:800}.btn:hover{background:#f5f8fa}.btn.primary{background:#173f67;color:#fff;border-color:#173f67}.btn.primary:hover{background:#0f3458}.btn.warn{color:#9a3412}.btn:disabled{opacity:.38;cursor:not-allowed}.button-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.type-title{margin-bottom:6px}.types{display:grid;grid-template-columns:1fr 1fr;gap:6px}.type{min-height:40px;display:flex;align-items:center;gap:7px;text-align:left;padding:7px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:10px;font-weight:780;line-height:1.2;color:#263b4a}.type.active{outline:2px solid #b8cfdf;background:#f3f8fb;border-color:#7998b0}.dot{width:10px;height:10px;flex:0 0 auto;border-radius:50%;display:inline-block}.geometry-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.geometry{padding:8px 4px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:10px;font-weight:800;line-height:1.2}.geometry.active{background:#e8f1f8;border-color:#8eafc8;outline:1px solid #b8cfdf;color:#133e60}.field{display:grid;gap:5px}.field label{font-size:10px;font-weight:850;color:#465b69}.field input,.field select,.field textarea{width:100%;min-width:0;padding:9px;border:1px solid #ccd8e1;border-radius:7px;background:#fff;color:var(--ink);font-size:12px}.field textarea{min-height:64px;resize:vertical}.color-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}.color-row input[type=color]{height:36px;padding:3px}.instructions{background:#f4f7f9;border-radius:7px;padding:9px;font-size:10px;color:#607482;line-height:1.4}.layers{padding:12px;flex:0 0 auto;min-height:0;overflow:visible}.list-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:9px}.list-actions{display:flex;gap:4px}.mini{padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#173f67;font-size:9px;font-weight:850;white-space:nowrap}.layer{display:flex;align-items:center;gap:7px;padding:8px;margin-bottom:6px;border:1px solid var(--line);border-radius:8px;background:#fff;min-width:0}.layer.selected{background:#f1f7fb;border-color:#9eb9cc}.layer.off{opacity:.65}.layer-check{width:18px;height:18px;flex:0 0 auto;accent-color:#173f67}.swatch{width:10px;height:10px;flex:0 0 auto;border-radius:3px}.layer-name{min-width:0;flex:1;font-size:11px;font-weight:780;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.layer-meta{display:block;font-size:9px;font-weight:500;color:#7a8b98;margin-top:2px}.layer-actions{display:flex;gap:2px}.iconbtn{border:0;background:transparent;border-radius:5px;padding:5px 6px;color:#173f67;font-size:14px;font-weight:850}.iconbtn:hover{background:#e3edf4}.footer{padding:10px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}.main{position:relative;min-width:0;min-height:0}.map{height:100%;width:100%;background:#dfe8ed}.map-badge,.status-badge,.legend{position:absolute;z-index:700;background:#fffffff0;border:1px solid #d6dfe5;border-radius:8px;box-shadow:0 5px 18px #1a34431a;font-size:10px;font-weight:800}.map-badge{top:12px;left:12px;padding:9px 11px}.status-badge{top:12px;right:12px;max-width:min(48%,420px);padding:9px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.legend{right:12px;bottom:15px;padding:9px 11px;line-height:1.9;max-width:260px;max-height:40vh;overflow:auto;font-weight:650}.legend div{white-space:nowrap}.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px}.modal{display:none;position:fixed;inset:0;background:#0d2337a8;z-index:2500;align-items:center;justify-content:center;padding:16px}.modal.open{display:flex}.modal-card{width:min(470px,100%);max-height:min(92dvh,850px);overflow:auto;background:#fff;border-radius:13px;padding:20px;box-shadow:0 18px 60px #081c2d50}.modal-card h2{font-size:18px;margin:0 0 5px}.modal-card .subhelp{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.45}.modal-fields{display:grid;gap:12px}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}.point-icon{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid #173f67;box-shadow:0 1px 6px #0006}.point-icon.active{background:#173f67;border-color:#fff;transform:scale(1.12)}.leaflet-container{touch-action:pan-x pan-y;overscroll-behavior:none}.leaflet-control-zoom a{width:40px;height:40px;line-height:40px;font-size:20px}.leaflet-control-attribution{font-size:9px}
+@media(max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:42dvh 58dvh}.main{grid-column:1;grid-row:1}.app>aside{grid-column:1;grid-row:2;border-right:0;border-top:1px solid var(--line);height:100%;max-height:100%;min-height:0}.sidehead{padding:10px 12px}.title{font-size:17px}.toolbar{padding:8px;gap:7px}.btn{min-height:40px;padding:8px 6px}.type{min-height:38px;padding:6px;font-size:9.5px}.layers{padding:8px}.status-badge{top:52px;left:10px;right:auto;max-width:calc(100vw - 20px)}.map-badge{top:8px;left:8px}.legend{right:7px;bottom:7px;max-width:70vw;max-height:24vh;font-size:9px}.layer{min-height:43px}.footer{padding:7px 10px}}
+@media(max-width:520px){.app{grid-template-rows:38dvh 62dvh}.title{font-size:16px}.subtitle{font-size:10px}.type{font-size:9px}.geometry{font-size:9px}.toolbar{gap:6px}.instructions{font-size:9.5px}.modal-card{padding:16px}.status-badge{font-size:9px}}
+@media(orientation:landscape) and (max-width:900px){.app{grid-template-columns:minmax(250px,36vw) minmax(0,1fr);grid-template-rows:100dvh}.app>aside{grid-column:1;grid-row:1;height:100dvh;max-height:100dvh;overflow-y:auto}.main{grid-column:2;grid-row:1;height:100dvh}.status-badge{top:60px;right:8px;left:auto;max-width:calc(64vw - 24px)}.legend{max-width:48vw;max-height:30vh}}
+@media(min-width:901px) and (max-width:1200px){.app{grid-template-columns:315px minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+<header class="sidehead"><div class="kicker">Panel de diseño · MIDES Florida</div><div class="title">Mapa 5K INJU–MIDES</div><div class="subtitle">Diseñá recorridos, zonas y puntos. Seleccioná una capa para editar sus vértices o su información.</div></header>
+<div class="toolbar">
+ <div class="button-grid">
+  <button class="btn primary" id="start">＋ Nueva capa</button>
+  <button class="btn" id="finish" disabled>Finalizar dibujo</button>
+  <button class="btn" id="cancel" disabled>Cancelar dibujo</button>
+  <button class="btn primary" id="editSelected" disabled>✎ Editar vértices</button>
+  <button class="btn" id="addPoint" disabled>＋ Agregar punto</button>
+  <button class="btn warn" id="deletePoint" disabled>Eliminar punto seleccionado</button>
+  <button class="btn" id="cancelEdit" disabled>↶ Descartar edición</button>
+  <button class="btn primary" id="saveEdit" disabled>Guardar edición</button>
+ </div>
+ <div><div class="type-title">Tipo de elemento</div><div class="types" id="categoryTypes">
+  <button class="type active" data-category="ruta"><i class="dot" style="background:#0756a4"></i>Recorrido 5K</button>
+  <button class="type" data-category="escenario"><i class="dot" style="background:#e5a100"></i>Escenario</button>
+  <button class="type" data-category="hidratacion"><i class="dot" style="background:#16a6a0"></i>Hidratación</button>
+  <button class="type" data-category="feria"><i class="dot" style="background:#16834a"></i>Feria social / zona</button>
+  <button class="type" data-category="otros"><i class="dot" style="background:#7c3aed"></i>Otro punto</button>
+ </div></div>
+ <div><div class="type-title">Geometría del dibujo</div><div class="geometry-types" id="geometryTypes">
+  <button class="geometry active" data-geometry="ruta">Línea / ruta</button>
+  <button class="geometry" data-geometry="poligono">Área / polígono</button>
+  <button class="geometry" data-geometry="punto">Marcador / punto</button>
+ </div></div>
+ <div class="color-row">
+  <div class="field"><label for="color">Color de la capa</label><input id="color" type="color" value="#0756a4"></div>
+  <div class="field"><label for="visible">Visibilidad pública</label><select id="visible"><option value="true">Visible</option><option value="false">Oculta</option></select></div>
+ </div>
+ <div class="instructions" id="instructions">Elegí una categoría y una geometría, pulsá Nueva capa y hacé clic en el mapa para marcar puntos. Línea: 2 puntos mínimo. Polígono: 3 puntos mínimo. Al finalizar se abre la ficha de información. Los cambios se guardan en Google Sheets.</div>
+ <div class="button-grid"><button class="btn" id="editInfo" disabled>Editar información</button><button class="btn" id="initSheet">Verificar Google Sheets</button></div>
+ <div class="status-line" id="status" role="status" aria-live="polite">Conectando con Google Sheets…</div>
+</div>
+<div class="layers">
+ <div class="list-head"><div class="section-title">Capas del mapa <span id="count">0</span></div><div class="list-actions"><button class="mini" id="showAll">Mostrar todas</button><button class="mini" id="hideAll">Ocultar todas</button></div></div>
+ <div id="list"><p class="status-line">Cargando elementos…</p></div>
+</div>
+<div class="footer"><span class="status-line">Los datos se guardan en Google Sheets, no en este navegador.</span><button class="btn" id="logout">Cerrar sesión</button></div>
+</aside>
+<main class="main"><div id="map" class="map"></div><div class="map-badge">FLORIDA · URUGUAY</div><div class="status-badge" id="mapStatus">Módulo: Diseño 5K</div><div class="legend"><div><i style="background:#0756a4"></i>Recorrido 5K</div><div><i style="background:#e5a100"></i>Escenario</div><div><i style="background:#16a6a0"></i>Hidratación</div><div><i style="background:#16834a"></i>Feria social / zona</div><div><i style="background:#7c3aed"></i>Otros elementos</div></div></main>
+</div>
+<div class="modal" id="modal">
+ <div class="modal-card">
+  <h2 id="modalTitle">Guardar capa</h2>
+  <div class="subhelp" id="modalHelp">Completá la información visible al tocar este elemento en el mapa público.</div>
+  <div class="modal-fields">
+   <div class="field"><label for="itemName">Nombre del elemento *</label><input id="itemName" maxlength="180" placeholder="Ej. Recorrido principal 5K"></div>
+   <div class="field"><label for="itemDescription">Descripción para el público</label><textarea id="itemDescription" rows="3" placeholder="Información que verá la gente al tocar el elemento…"></textarea></div>
+   <div class="field"><label for="itemSchedule">Horario (opcional)</label><input id="itemSchedule" maxlength="120" placeholder="Ej. Concentración 17:30"></div>
+   <div class="field"><label for="itemDetails">Detalles adicionales (opcional)</label><textarea id="itemDetails" rows="3" placeholder="Servicios, indicaciones o instituciones…"></textarea></div>
+  </div>
+  <div class="modal-actions"><button class="btn" id="modalCancel">Cancelar</button><button class="btn primary" id="modalSave">Guardar capa</button></div>
+ </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbzgpeScKyHRnmtFTjVvS__uv3crjL22lRutqf82h_do-HgeUE59GbGQODYN5KGMNr8ZaA/exec'; // Pegá aquí la URL de la implementación web de Google Apps Script.
-let adminKey='';const map=L.map('map').setView([-34.0958,-56.2142],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
-const drawn=new L.FeatureGroup().addTo(map);let records=[],selectedId=null,pending=null,drawControl=null;
-const $=id=>document.getElementById(id);function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function say(s){$('status').textContent=s}
-function getForm(){return {id:selectedId||('item-'+Date.now()),nombre:$('nombre').value.trim(),tipo:$('tipo').value,geometria:$('geometria').value,descripcion:$('descripcion').value.trim(),horario:$('horario').value.trim(),detalles:$('detalles').value.trim(),color:$('color').value,visible:$('visible').value==='true'}}
-function pointsFrom(layer){if(layer instanceof L.Polygon){return layer.getLatLngs()[0].map(p=>({lat:p.lat,lng:p.lng}))}if(layer instanceof L.Polyline){return layer.getLatLngs().map(p=>({lat:p.lat,lng:p.lng}))}const p=layer.getLatLng();return [{lat:p.lat,lng:p.lng}]}
-function popup(o){return '<b>'+esc(o.nombre)+'</b><br>'+esc(o.descripcion||'')+(o.horario?'<br><b>Horario:</b> '+esc(o.horario):'')}
-function drawRecord(o){if(o.visible===false)return;let layer;const pts=(o.puntos||[]).map(p=>[+p.lat,+p.lng]);if(o.geometria==='ruta'&&pts.length>1)layer=L.polyline(pts,{color:o.color||'#0756a4',weight:5});else if(o.geometria==='poligono'&&pts.length>2)layer=L.polygon(pts,{color:o.color||'#16834a',fillOpacity:.2});else if(pts.length)layer=L.marker(pts[0]);if(!layer)return;layer.bindPopup(popup(o));layer.on('click',()=>select(o.id));layer._recordId=o.id;drawn.addLayer(layer)}
-function render(){drawn.clearLayers();records.forEach(drawRecord);$('items').innerHTML='<b>Elementos del mapa ('+records.length+')</b>'+(records.length?records.map(o=>'<div class="item"><span>'+esc(o.nombre)+' '+(o.visible===false?'(oculto)':'')+'</span><button data-id="'+esc(o.id)+'" class="secondary">Editar</button></div>').join(''):'<p class="status">Todavía no hay elementos guardados.</p>');$('items').querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>select(b.dataset.id))}
-function select(id){const o=records.find(r=>r.id===id);if(!o)return;selectedId=id;$('nombre').value=o.nombre||'';$('tipo').value=o.tipo||'ruta';$('geometria').value=o.geometria||'ruta';$('descripcion').value=o.descripcion||'';$('horario').value=o.horario||'';$('detalles').value=o.detalles||'';$('color').value=o.color||'#0756a4';$('visible').value=String(o.visible!==false);say('Editando: '+o.nombre)}
-function startDraw(){const type=$('geometria').value;if(drawControl){map.removeControl(drawControl);drawControl=null}if(type==='ruta')pending=new L.Draw.Polyline(map,{shapeOptions:{color:$('color').value,weight:5},repeatMode:false});else if(type==='poligono')pending=new L.Draw.Polygon(map,{allowIntersection:false,showArea:true,shapeOptions:{color:$('color').value,fillOpacity:.25},repeatMode:false});else pending=new L.Draw.Marker(map);pending.enable();say('Dibujá el elemento en el mapa. Al terminar, se asociará a los datos del formulario.')}
-function persistRecord(o,successMessage){
- if(!o||!o.nombre){say('El dibujo quedó pendiente: completá el nombre y pulsá Guardar elemento.');return}
- if(!API_URL){say('No se pudo guardar: falta configurar la conexión con Google Sheets.');return}
- say('Guardando automáticamente «'+o.nombre+'» en Google Sheets…');
- const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[o]}));
- jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado correctamente: '+o.nombre),'No se pudo guardar automáticamente. Revisá la clave de edición y la conexión.');
-}
-map.on(L.Draw.Event.CREATED,e=>{
- if(pending)pending.disable();
- pending=null;
- const o=getForm();
- o.puntos=pointsFrom(e.layer);
- const idx=records.findIndex(r=>r.id===o.id);
- if(idx>=0)records[idx]=o;else records.push(o);
- selectedId=o.id;
- render();
- persistRecord(o,'✓ Dibujo cerrado y guardado en Google Sheets: '+o.nombre);
-});
-$('draw').onclick=()=>{if(!$('nombre').value.trim()){$('nombre').focus();say('Ingresá un nombre antes de dibujar.');return}startDraw()};
-$('cancel').onclick=()=>{if(pending)pending.disable();pending=null;say('Dibujo cancelado; no se guardó ningún cambio.')};
-$('clear').onclick=()=>{if(pending){pending.disable();pending=null}$('form').reset();$('color').value='#0756a4';selectedId=null;say('Formulario limpio. Completá los datos para crear un elemento.');};
-$('save').onclick=()=>{
- const f=getForm();const o=records.find(r=>r.id===f.id);
- if(!f.nombre){say('El nombre es obligatorio.');return}
- if(!o){say('Primero dibujá o seleccioná un elemento existente.');return}
- Object.assign(o,f);render();persistRecord(o,'✓ Cambios guardados en Google Sheets: '+o.nombre);
+(function(){
+'use strict';
+const API_URL='https://script.google.com/macros/s/AKfycbzgpeScKyHRnmtFTjVvS__uv3crjL22lRutqf82h_do-HgeUE59GbGQODYN5KGMNr8ZaA/exec';
+const API_VERSION_PREFIX='2026-10-23-mapa5k-v';
+const $=id=>document.getElementById(id);
+const categoryDefs={
+ ruta:{name:'Recorrido 5K',color:'#0756a4'},
+ escenario:{name:'Escenario',color:'#e5a100'},
+ hidratacion:{name:'Hidratación',color:'#16a6a0'},
+ feria:{name:'Feria social / zona',color:'#16834a'},
+ otros:{name:'Otro punto',color:'#7c3aed'}
 };
-$('initSheet').onclick=()=>{if(!API_URL){say('Falta configurar la conexión con Google Sheets.');return}say('Preparando y verificando la pestaña Mapa5K…');jsonp(API_URL+'?action=mapa5kInicializar','✓ Pestaña Mapa5K y encabezados verificados. Abrí la hoja para comprobarlos.','No se pudo preparar Google Sheets.');};
-$('remove').onclick=()=>{if(!selectedId){say('Seleccioná un elemento de la lista primero.');return}if(!confirm('¿Ocultar este elemento del mapa público? El registro se conservará en Google Sheets.'))return;const o=records.find(r=>r.id===selectedId);if(!o)return;o.visible=false;render();if(!API_URL){say('Oculto solo en esta sesión.');return}jsonp(API_URL+'?action=mapa5kSave&data='+encodeURIComponent(JSON.stringify({key:adminKey,items:[o]})),'Elemento oculto; registro conservado.','No se pudo guardar el cambio.');};
-function jsonp(url,ok,fail){const cb='mapCb'+Date.now();let script;window[cb]=res=>{delete window[cb];if(script)script.remove();if(!res||typeof res.ok!=='boolean'){say('La API respondió en un formato inesperado. Volvé a implementar el Apps Script compartido con una nueva versión.');return}if(!res.apiVersion||!res.jsonpSupported||res.apiVersion!=='2026-10-23-mapa5k-v3'){say('La API activa de Google Apps Script no tiene la versión necesaria para guardar el mapa (versión detectada: '+String(res.apiVersion||'sin versión')+'). Hay que actualizar Code.gs y crear una nueva versión de la implementación web; hasta entonces no se puede confirmar ningún registro.');return}if(res.ok){if(url.indexOf('action=mapa5kList')!==-1){records=Array.isArray(res.items)?res.items:[];render()}say(ok+' (API '+res.apiVersion+')');/* No recargar aquí: el editor ya actualizó la lista local y así se conserva visible la confirmación del guardado. */}else say(fail+(res.error?' '+res.error:''))};script=document.createElement('script');script.src=url+'&callback='+cb+'&t='+Date.now();script.onerror=()=>{delete window[cb];say('No se pudo conectar con Google Apps Script. Verificá que la implementación esté activa y accesible.');};document.body.appendChild(script)}
-function load(){if(!API_URL){records=[];render();return}jsonp(API_URL+'?action=mapa5kList','Datos cargados.','No se pudo cargar el mapa.')}
-if(API_URL){adminKey=prompt('Clave de edición del mapa:')||'';load()}else{render()}
-</script></body></html>
+const map=L.map('map',{preferCanvas:true}).setView([-34.0958,-56.2142],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);
+map.createPane('mapFeatures');map.getPane('mapFeatures').style.zIndex=420;
+map.createPane('drawingPreview');map.getPane('drawingPreview').style.zIndex=700;
+map.createPane('vertexHandles');map.getPane('vertexHandles').style.zIndex=900;
+const featureGroup=L.featureGroup().addTo(map),previewGroup=L.layerGroup().addTo(map),vertexGroup=L.layerGroup().addTo(map);
+let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
+const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
+function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
+function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+function activeRecord(){return records.find(r=>String(r.id)===String(selectedId))||null;}
+function minPoints(g){return g==='punto'?1:(g==='poligono'?3:2);}
+function currentPoints(){return editingId?editPoints:draftPoints;}
+function pointsToLatLngs(points){return (points||[]).map(p=>[Number(p.lat),Number(p.lng)]);}
+function clonePoints(points){return (points||[]).map(p=>({lat:Number(p.lat),lng:Number(p.lng)}));}
+function pointFromLatLng(ll){return {lat:Number(ll.lat),lng:Number(ll.lng)};}
+function iconHtml(active){return '<div class="point-icon'+(active?' active':'')+'"></div>';}
+function vertexIcon(active){return L.divIcon({className:'edit-vertex-icon',html:iconHtml(active),iconSize:[20,20],iconAnchor:[10,10]});}
+function geometryName(g){return g==='poligono'?'Área / polígono':g==='punto'?'Marcador / punto':'Línea / ruta';}
+function typeColor(cat){return categoryDefs[cat]?.color||'#0756a4';}
+function chosenLayerStyle(o,editing){const col=o.color||typeColor(o.tipo);return {pane:editing?'drawingPreview':'mapFeatures',color:col,weight:editing?5:4,opacity:editing?0.95:0.82,fillColor:col,fillOpacity:editing?0.18:0.22,dashArray:editing?'7 5':null,lineCap:'round',lineJoin:'round'};}
+function popupContent(o){return '<div style="min-width:180px"><strong>'+esc(o.nombre)+'</strong>'+(o.descripcion?'<div style="margin-top:6px">'+esc(o.descripcion).replace(/\n/g,'<br>')+'</div>':'')+(o.horario?'<div style="margin-top:5px"><b>Horario:</b> '+esc(o.horario)+'</div>':'')+(o.detalles?'<div style="margin-top:5px"><b>Detalles:</b> '+esc(o.detalles).replace(/\n/g,'<br>')+'</div>':'')+'</div>';}
+function createFeature(o,isEditing){
+ const pts=pointsToLatLngs(isEditing?editPoints:o.puntos||[]);
+ if(!pts.length)return null;
+ const style=chosenLayerStyle(o,isEditing);let layer;
+ if(o.geometria==='ruta'&&pts.length>1)layer=L.polyline(pts,style);
+ else if(o.geometria==='poligono'&&pts.length>2)layer=L.polygon(pts,style);
+ else if(pts.length)layer=L.circleMarker(pts[0],{pane:style.pane,radius:8,color:o.color||typeColor(o.tipo),weight:3,fillColor:'#fff',fillOpacity:1});
+ if(!layer)return null;
+ layer.bindPopup(popupContent(o));
+ layer.on('click',function(){if(!drawing&&!editingId){selectRecord(o.id,false);}});
+ layer._recordId=o.id;
+ return layer;
+}
+function renderFeatures(){
+ featureGroup.clearLayers();previewGroup.clearLayers();
+ records.forEach(function(o){
+  const isCurrentEditing=String(o.id)===String(editingId);
+  if(o.visible===false&&!isCurrentEditing)return;
+  const feature=createFeature(o,isCurrentEditing);
+  if(feature){(isCurrentEditing?previewGroup:featureGroup).addLayer(feature);}
+ });
+ if(drawing){
+  previewGroup.clearLayers();
+  const temp={id:'__draft__',tipo:category,geometria:geometry,color:$('color').value,nombre:categoryDefs[category].name,puntos:draftPoints,visible:true};
+  const layer=createFeature(temp,true);
+  if(layer)previewGroup.addLayer(layer);
+  draftPoints.forEach(function(p){L.circleMarker([p.lat,p.lng],{pane:'drawingPreview',radius:4,color:'#173f67',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(previewGroup);});
+ }
+ updateVertexMarkers();
+}
+function updateVertexMarkers(){
+ vertexGroup.clearLayers();
+ if(!editingId)return;
+ editPoints.forEach(function(p,index){
+  const marker=L.marker([p.lat,p.lng],{pane:'vertexHandles',icon:vertexIcon(index===selectedVertex),draggable:true,zIndexOffset:6000,autoPan:true}).addTo(vertexGroup);
+  marker.on('click',function(e){L.DomEvent.stopPropagation(e);selectedVertex=index;updateVertexMarkers();syncButtons();setStatus('Punto '+(index+1)+' seleccionado. Podés arrastrarlo, eliminarlo o agregar otro.',false);});
+  marker.on('dragstart',function(){selectedVertex=index;});
+  marker.on('drag',function(){const ll=marker.getLatLng();editPoints[index]={lat:ll.lat,lng:ll.lng};replaceEditingPreview();});
+  marker.on('dragend',function(){const ll=marker.getLatLng();editPoints[index]={lat:ll.lat,lng:ll.lng};dirty=true;replaceEditingPreview();setStatus('Posición del punto '+(index+1)+' modificada. Pulsá Guardar edición para confirmar.',false);});
+ });
+}
+function replaceEditingPreview(){
+ previewGroup.clearLayers();
+ const o=records.find(r=>String(r.id)===String(editingId));if(!o)return;
+ const f=createFeature(Object.assign({},o,{puntos:editPoints}),true);if(f)previewGroup.addLayer(f);
+}
+function renderList(){
+ const list=$('list');$('count').textContent=records.length;
+ if(!records.length){list.innerHTML='<p class="status-line">Todavía no hay capas guardadas. Elegí el tipo de elemento y pulsá Nueva capa.</p>';syncButtons();return;}
+ list.innerHTML=records.map(function(o){
+  const active=String(o.id)===String(selectedId),cat=categoryDefs[o.tipo]||categoryDefs.otros;
+  const sub=geometryName(o.geometria)+(o.visible===false?' · Oculta':'');
+  return '<div class="layer'+(active?' selected':'')+(o.visible===false?' off':'')+'" data-id="'+esc(o.id)+'">'+
+   '<input class="layer-check" type="checkbox" aria-label="Mostrar '+esc(o.nombre)+'" data-visible="'+esc(o.id)+'" '+(o.visible===false?'':'checked')+'>'+
+   '<i class="swatch" style="background:'+esc(o.color||cat.color)+'"></i>'+
+   '<button type="button" class="iconbtn layer-select" data-select="'+esc(o.id)+'" style="flex:1;min-width:0;text-align:left"><span class="layer-name">'+esc(o.nombre)+'</span><span class="layer-meta">'+esc(sub)+'</span></button>'+
+   '<div class="layer-actions"><button type="button" class="iconbtn" title="Editar vértices" aria-label="Editar vértices" data-edit="'+esc(o.id)+'">✎</button><button type="button" class="iconbtn" title="Editar información" aria-label="Editar información" data-info="'+esc(o.id)+'">⋯</button></div></div>';
+ }).join('');
+ list.querySelectorAll('[data-select]').forEach(b=>b.addEventListener('click',()=>selectRecord(b.dataset.select,true)));
+ list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
+ list.querySelectorAll('[data-info]').forEach(b=>b.addEventListener('click',()=>openInfo(b.dataset.info)));
+ list.querySelectorAll('[data-visible]').forEach(b=>b.addEventListener('change',()=>setVisibility(b.dataset.visible,b.checked)));
+ syncButtons();
+}
+function syncButtons(){
+ $('start').disabled=!supportedConnection()||drawing||!!editingId;
+ $('finish').disabled=!drawing;
+ $('cancel').disabled=!drawing;
+ $('editSelected').disabled=drawing||!!editingId||!activeRecord();
+ $('editInfo').disabled=drawing||!!editingId||!activeRecord();
+ $('addPoint').disabled=!editingId||addingPoint;
+ $('deletePoint').disabled=!editingId||selectedVertex<0||editPoints.length<=minPoints(geometryOfEditing());
+ $('cancelEdit').disabled=!editingId;
+ $('saveEdit').disabled=!editingId||!dirty;
+}
+function geometryOfEditing(){const o=records.find(r=>String(r.id)===String(editingId));return o?o.geometria:'ruta';}
+function supportedConnection(){return !!API_URL;}
+function setActiveCategory(cat){
+ category=cat;document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('active',b.dataset.category===cat));
+ const input=$('color');const current=input.value.toLowerCase();const old=categoryDefs[category].color;
+ input.value=typeColor(cat);
+}
+function setGeometry(g){geometry=g;document.querySelectorAll('[data-geometry]').forEach(b=>b.classList.toggle('active',b.dataset.geometry===g));}
+function selectRecord(id,zoom){
+ if(drawing||editingId)return;
+ const o=records.find(r=>String(r.id)===String(id));if(!o)return;
+ selectedId=o.id;category=categoryDefs[o.tipo]?o.tipo:'otros';setActiveCategory(category);setGeometry(o.geometria||'ruta');
+ $('color').value=o.color||typeColor(category);$('visible').value=String(o.visible!==false);
+ renderList();renderFeatures();syncButtons();
+ if(zoom){const layer=featureGroup.getLayers().find(l=>String(l._recordId)===String(o.id));if(layer){try{map.fitBounds(layer.getBounds?layer.getBounds():L.latLngBounds([layer.getLatLng(),layer.getLatLng()]),{padding:[40,40],maxZoom:17});}catch(_){}}}
+ setStatus('Seleccionado: '+o.nombre,false);
+}
+function defaultName(){return categoryDefs[category].name;}
+function openInfo(id){
+ const o=records.find(r=>String(r.id)===String(id));
+ if(!o)return;
+ selectedId=o.id;modalMode='edit';
+ $('modalTitle').textContent='Editar información de la capa';
+ $('modalHelp').textContent='Actualizá el nombre, la descripción y los detalles que se verán en el mapa público.';
+ $('itemName').value=o.nombre||'';$('itemDescription').value=o.descripcion||'';$('itemSchedule').value=o.horario||'';$('itemDetails').value=o.detalles||'';
+ $('modalSave').textContent='Guardar información';$('modal').classList.add('open');$('itemName').focus();selectRecord(id,false);
+}
+function openNewInfo(){
+ modalMode='new';$('modalTitle').textContent='Guardar nueva capa';
+ $('modalHelp').textContent='La geometría ya está dibujada. Completá la ficha informativa antes de guardarla en Google Sheets.';
+ $('itemName').value=defaultName();$('itemDescription').value='';$('itemSchedule').value='';$('itemDetails').value='';
+ $('modalSave').textContent='Guardar capa';$('modal').classList.add('open');$('itemName').focus();
+}
+function closeModal(){$('modal').classList.remove('open');}
+function payloadForRecord(o){return {id:o.id,nombre:o.nombre,tipo:o.tipo,geometria:o.geometria,descripcion:o.descripcion||'',horario:o.horario||'',detalles:o.detalles||'',color:o.color||typeColor(o.tipo),visible:o.visible!==false,puntos:clonePoints(o.puntos||[])};}
+function jsonp(url,successMessage,failureMessage,onSuccess){
+ return new Promise(function(resolve,reject){
+  const cb='map5kCb'+Date.now()+'_'+(++requestCounter);
+  let script=null,timer=null,done=false;
+  function cleanup(){if(done)return;done=true;if(timer)clearTimeout(timer);if(script)script.remove();try{delete window[cb];}catch(_){window[cb]=undefined;}}
+  function fail(message){cleanup();setStatus(message,true);reject(new Error(message));}
+  window[cb]=function(res){
+   if(!res||typeof res.ok!=='boolean'){fail('La API respondió en un formato inesperado. Revisá la implementación web de Apps Script.');return;}
+   if(res.apiVersion&&!String(res.apiVersion).includes(API_VERSION_PREFIX)){fail('La API activa no corresponde a la versión del mapa 5K. Actualizá Code.gs y publicá una nueva versión de la implementación web.');return;}
+   if(!res.ok){fail((failureMessage||'La operación no se completó.')+(res.error?' '+res.error:''));return;}
+   cleanup();
+   try{if(onSuccess)onSuccess(res);}catch(e){setStatus('La operación respondió correctamente, pero no se pudo actualizar la pantalla.',true);}
+   setStatus(successMessage+(res.apiVersion?' · API '+res.apiVersion:''),false);resolve(res);
+  };
+  script=document.createElement('script');script.async=true;
+  script.onerror=function(){fail('No se pudo conectar con Google Apps Script. Verificá la URL /exec, la implementación y sus permisos.');};
+  timer=setTimeout(function(){fail('Google Apps Script no respondió a tiempo. Intentá nuevamente.');},25000);
+  const separator=url.includes('?')?'&':'?';
+  script.src=url+separator+'callback='+encodeURIComponent(cb)+'&_='+Date.now();
+  document.head.appendChild(script);
+ });
+}
+function persistRecord(o,successMessage){
+ if(!adminKey){setStatus('No hay clave de edición. Cerrá y volvé a ingresar al editor.',true);return Promise.reject(new Error('Falta clave de edición'));}
+ const payload=encodeURIComponent(JSON.stringify({key:adminKey,items:[payloadForRecord(o)]}));
+ return jsonp(API_URL+'?action=mapa5kSave&data='+payload,successMessage||('Guardado en Google Sheets: '+o.nombre),'No se pudo guardar en Google Sheets.',function(){});
+}
+async function loadRecords(){
+ setStatus('Cargando capas desde Google Sheets…',false);
+ try{
+  const data=await jsonp(API_URL+'?action=mapa5kList','Capas cargadas desde Google Sheets.','No se pudo cargar el mapa.',function(res){records=Array.isArray(res.items)?res.items.map(payloadForRecord):[];});
+  renderList();renderFeatures();syncButtons();setStatus('Conectado a Google Sheets · '+records.length+' capas',false);
+ }catch(_){records=[];renderList();renderFeatures();syncButtons();}
+}
+async function saveRecordAndConfirm(o,success){
+ const result=await persistRecord(o,success);return result;
+}
+function startDrawing(){
+ if(drawing||editingId)return;
+ if(!adminKey){setStatus('Ingresá la clave de edición para comenzar.',true);return;}
+ drawing=true;draftPoints=[];pendingFeature=null;
+ const selected=activeRecord();
+ if(selected){selectedId=null;}
+ previewGroup.clearLayers();vertexGroup.clearLayers();syncButtons();renderList();
+ $('instructions').textContent=geometry==='punto'?'Hacé clic una vez en el mapa para colocar el marcador y luego pulsá Finalizar dibujo.':geometry==='poligono'?'Hacé clic en el mapa para agregar vértices al área; se cerrará al finalizar. Necesitás al menos 3 puntos.':'Hacé clic en el mapa para marcar los puntos del recorrido. Necesitás al menos 2 puntos.';
+ setStatus('Dibujo en curso: agregá puntos en el mapa y pulsá Finalizar dibujo.',false);
+}
+function cancelDrawing(){
+ if(!drawing)return;drawing=false;draftPoints=[];previewGroup.clearLayers();renderList();renderFeatures();syncButtons();
+ $('instructions').textContent='Dibujo cancelado; no se guardó ninguna capa nueva.';setStatus('Dibujo cancelado. No se modificó Google Sheets.',false);
+}
+function finishDrawing(){
+ if(!drawing)return;
+ const minimum=minPoints(geometry);
+ if(draftPoints.length<minimum){setStatus(geometry==='punto'?'Colocá el marcador antes de finalizar.':'Faltan puntos para cerrar esta geometría. Necesitás al menos '+minimum+'.',true);return;}
+ drawing=false;pendingFeature={id:'capa-'+Date.now(),nombre:defaultName(),tipo:category,geometria:geometry,descripcion:'',horario:'',detalles:'',color:$('color').value,visible:$('visible').value==='true',puntos:clonePoints(draftPoints)};
+ previewGroup.clearLayers();renderFeatures();syncButtons();openNewInfo();
+}
+async function saveModalInfo(){
+ const name=$('itemName').value.trim();if(!name){$('itemName').focus();setStatus('El nombre del elemento es obligatorio.',true);return;}
+ const b=$('modalSave');b.disabled=true;b.textContent='Guardando…';
+ try{
+  const values={nombre:name,descripcion:$('itemDescription').value.trim(),horario:$('itemSchedule').value.trim(),detalles:$('itemDetails').value.trim()};
+  if(modalMode==='new'){
+   if(!pendingFeature)throw new Error('No hay un dibujo pendiente para guardar.');
+   const o=Object.assign({},pendingFeature,values);records.push(o);selectedId=o.id;pendingFeature=null;draftPoints=[];
+   renderList();renderFeatures();syncButtons();closeModal();
+   await saveRecordAndConfirm(o,'Capa guardada y confirmada en Google Sheets: '+o.nombre);
+   renderList();renderFeatures();selectRecord(o.id,false);
+  }else{
+   const o=activeRecord();if(!o)throw new Error('No se encontró la capa seleccionada.');
+   Object.assign(o,values);selectedId=o.id;closeModal();renderList();renderFeatures();
+   await saveRecordAndConfirm(o,'Información actualizada en Google Sheets: '+o.nombre);
+   renderList();renderFeatures();selectRecord(o.id,false);
+  }
+ }catch(e){setStatus('No se confirmó el guardado: '+e.message,true);}
+ finally{b.disabled=false;b.textContent=modalMode==='new'?'Guardar capa':'Guardar información';}
+}
+function startEdit(id){
+ if(drawing||editingId)return;
+ const o=records.find(r=>String(r.id)===String(id||selectedId));if(!o)return;
+ selectedId=o.id;editingId=o.id;editSnapshot=clonePoints(o.puntos||[]);editPoints=clonePoints(o.puntos||[]);selectedVertex=-1;addingPoint=false;dirty=false;
+ category=categoryDefs[o.tipo]?o.tipo:'otros';setActiveCategory(category);setGeometry(o.geometria||'ruta');$('color').value=o.color||typeColor(category);$('visible').value=String(o.visible!==false);
+ renderList();renderFeatures();updateVertexMarkers();syncButtons();
+ const n=minPoints(o.geometria);
+ $('instructions').textContent='Arrastrá los vértices para moverlos. Tocá un vértice y usá Eliminar punto seleccionado, o pulsá Agregar punto y luego el mapa. La geometría original se conserva hasta que guardes.';
+ setStatus('Editando vértices de: '+o.nombre+'. Los cambios todavía no están guardados.',false);
+ try{const layer=previewGroup.getLayers()[0];if(layer&&layer.getBounds)map.fitBounds(layer.getBounds(),{padding:[40,40],maxZoom:17});}catch(_){}
+}
+function exitEdit(){
+ if(!editingId)return;
+ const o=records.find(r=>String(r.id)===String(editingId));
+ if(o&&editSnapshot)o.puntos=clonePoints(editSnapshot);
+ editingId=null;editPoints=[];editSnapshot=null;selectedVertex=-1;addingPoint=false;dirty=false;vertexGroup.clearLayers();previewGroup.clearLayers();
+ renderList();renderFeatures();syncButtons();setStatus('Edición descartada; se restauró la geometría guardada.',false);
+}
+async function saveEdit(){
+ if(!editingId)return;
+ const o=records.find(r=>String(r.id)===String(editingId));if(!o)return;
+ if(editPoints.length<minPoints(o.geometria)){setStatus('La geometría necesita al menos '+minPoints(o.geometria)+' punto(s).',true);return;}
+ const before=clonePoints(editSnapshot||[]);o.puntos=clonePoints(editPoints);
+ const b=$('saveEdit');b.disabled=true;b.textContent='Guardando…';
+ try{
+  await saveRecordAndConfirm(o,'Edición guardada y confirmada en Google Sheets: '+o.nombre);
+  editingId=null;editPoints=[];editSnapshot=null;selectedVertex=-1;addingPoint=false;dirty=false;vertexGroup.clearLayers();
+  renderList();renderFeatures();syncButtons();selectRecord(o.id,false);
+ }catch(e){o.puntos=before;setStatus('No se pudo confirmar el guardado. La edición sigue abierta para que puedas volver a intentar. Detalle: '+e.message,true);}
+ finally{b.textContent='Guardar edición';syncButtons();}
+}
+function setVisibility(id,visible){
+ const o=records.find(r=>String(r.id)===String(id));if(!o)return;
+ const previous=o.visible!==false;o.visible=visible;renderList();renderFeatures();
+ persistRecord(o,visible?'Capa visible en el mapa público.':'Capa oculta del mapa público.').catch(()=>{o.visible=previous;renderList();renderFeatures();});
+}
+async function setAllVisibility(visible){
+ if(!records.length)return;
+ $('showAll').disabled=true;$('hideAll').disabled=true;
+ const changed=records.filter(o=>(o.visible!==false)!==visible);
+ try{
+  for(const o of changed){o.visible=visible;renderList();renderFeatures();await persistRecord(o, (visible?'Mostrando':'Ocultando')+' capas…');}
+  setStatus(visible?'Todas las capas quedaron visibles.':'Todas las capas quedaron ocultas.',false);
+ }catch(e){setStatus('La actualización de visibilidad se interrumpió: '+e.message,true);await loadRecords();}
+ finally{$('showAll').disabled=false;$('hideAll').disabled=false;}
+}
+function chooseMapClick(e){
+ const p=pointFromLatLng(e.latlng);
+ if(drawing){draftPoints.push(p);renderFeatures();setStatus('Puntos marcados: '+draftPoints.length+'. '+(draftPoints.length>=minPoints(geometry)?'Podés finalizar el dibujo.':'Agregá al menos '+(minPoints(geometry)-draftPoints.length)+' punto(s) más.'),false);return;}
+ if(editingId&&addingPoint){editPoints.push(p);addingPoint=false;selectedVertex=editPoints.length-1;dirty=true;replaceEditingPreview();updateVertexMarkers();syncButtons();setStatus('Punto agregado. Pulsá Guardar edición para confirmar.',false);}
+}
+map.on('click',chooseMapClick);
+document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{if(drawing||editingId)return;category=b.dataset.category;setActiveCategory(category);if(!$('color').dataset.manual)$('color').value=typeColor(category);}));
+document.querySelectorAll('[data-geometry]').forEach(b=>b.addEventListener('click',()=>{if(drawing||editingId)return;setGeometry(b.dataset.geometry);}));
+$('color').addEventListener('input',()=>{$('color').dataset.manual='true';if(drawing)renderFeatures();});
+$('visible').addEventListener('change',()=>{const o=activeRecord();if(o&&!drawing&&!editingId)setVisibility(o.id,$('visible').value==='true');});
+$('start').onclick=startDrawing;$('finish').onclick=finishDrawing;$('cancel').onclick=cancelDrawing;
+$('editSelected').onclick=()=>{const o=activeRecord();if(o)startEdit(o.id);};
+$('editInfo').onclick=()=>{const o=activeRecord();if(o)openInfo(o.id);};
+$('addPoint').onclick=()=>{if(!editingId)return;addingPoint=true;setStatus('Ahora hacé clic en el mapa donde querés agregar el nuevo punto.',false);syncButtons();};
+$('deletePoint').onclick=()=>{
+ if(!editingId||selectedVertex<0)return;
+ const o=records.find(r=>String(r.id)===String(editingId));if(!o)return;
+ if(editPoints.length<=minPoints(o.geometria)){setStatus('No podés borrar más puntos: el elemento necesita conservar al menos '+minPoints(o.geometria)+'.',true);return;}
+ editPoints.splice(selectedVertex,1);selectedVertex=-1;dirty=true;replaceEditingPreview();updateVertexMarkers();syncButtons();setStatus('Punto eliminado de la edición. Pulsá Guardar edición para confirmar.',false);
+};
+$('cancelEdit').onclick=exitEdit;$('saveEdit').onclick=saveEdit;
+$('modalCancel').onclick=()=>{closeModal();if(modalMode==='new'&&pendingFeature){previewGroup.clearLayers();pendingFeature=null;renderFeatures();setStatus('Guardado cancelado. El dibujo no se registró en Google Sheets.',false);}syncButtons();};
+$('modalSave').onclick=saveModalInfo;
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modalCancel').click();});
+$('itemName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveModalInfo();}});
+$('showAll').onclick=()=>setAllVisibility(true);$('hideAll').onclick=()=>setAllVisibility(false);
+$('initSheet').onclick=async()=>{
+ try{await jsonp(API_URL+'?action=mapa5kInicializar','Pestaña Mapa5K y encabezados verificados.','No se pudo preparar Google Sheets.');await loadRecords();}
+ catch(_){}
+};
+$('logout').onclick=()=>{if(drawing&&!confirm('Hay un dibujo en curso sin guardar. ¿Querés salir y descartarlo?'))return;if(editingId&&dirty&&!confirm('Hay cambios de geometría sin guardar. ¿Querés salir y descartarlos?'))return;adminKey='';location.href='index.html';};
+window.addEventListener('resize',()=>setTimeout(()=>map.invalidateSize(true),100));
+window.addEventListener('orientationchange',()=>setTimeout(()=>map.invalidateSize(true),350));
+if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>setTimeout(()=>map.invalidateSize(true),100));
+adminKey=prompt('Clave de edición del mapa 5K:')||'';
+if(!adminKey){setStatus('Falta la clave de edición. Algunas operaciones requieren autorización.',true);}
+loadRecords();
+setTimeout(()=>map.invalidateSize(true),120);setTimeout(()=>map.invalidateSize(true),650);
+})();
+</script>
+</body>
+</html>
