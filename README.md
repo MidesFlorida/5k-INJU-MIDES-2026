@@ -1,42 +1,49 @@
 # Mapa público y editor · 5K INJU–MIDES Florida 2026
 
-Este repositorio contiene la vista pública del mapa y el editor cartográfico del evento. El backend utiliza el **mismo proyecto de Google Apps Script y la misma hoja de cálculo que el Centro de Prensa MIDES Florida**, por lo que no debe crearse un backend separado ni reemplazarse el script compartido por el antiguo script independiente de este repositorio.
+Este repositorio contiene la vista pública, el editor cartográfico y la API independiente del evento. **No comparte backend ni planilla con el Centro de Prensa MIDES Florida.**
 
-## Archivos y conexión
+## Accesos
 
-- Mapa público: https://midesflorida.github.io/5k-INJU-MIDES-2026/
-- Editor: https://midesflorida.github.io/5k-INJU-MIDES-2026/editor.html
-- Pestaña exclusiva del mapa: `Mapa5K`
-- La URL de Apps Script ya está configurada en `index.html` y `editor.html`.
+- [Mapa público](https://midesflorida.github.io/5k-INJU-MIDES-2026/)
+- [Editor de diseño](https://midesflorida.github.io/5k-INJU-MIDES-2026/editor.html)
+- [Planilla exclusiva de la 5K](https://docs.google.com/spreadsheets/d/1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo/edit)
+- La URL de Apps Script que usan las páginas se configura en `api-config.js`.
 
-## Reparación de Google Sheets y activación de la API
+## Funciones
 
-**La pestaña de datos es `Mapa5K`**, en la hoja [Google Sheets del mapa](https://docs.google.com/spreadsheets/d/1OuIrwtwKQ1mDDTCq-QLuyH-q82Pla2HcKiXqOerDwn4/edit). Los encabezados esperados, en este orden, son:
+- Dibujo y edición de rutas, áreas y puntos; guardado acumulativo en la pestaña `Mapa5K`.
+- Flechas que indican el sentido de los recorridos en el editor y en el mapa público.
+- Interfaz adaptable a computadoras, tabletas y teléfonos.
+- Cronómetro oficial común: los controles de **Iniciar carrera** y **Finalizar carrera** están en el editor; el tiempo transcurrido se ve en el mapa público.
+- Seguimiento GPS **voluntario**: cada participante ingresa un dorsal o alias y activa explícitamente el uso de su ubicación. El alias y la posición actual se ven en el mapa público mientras comparte. Debe dejar la página abierta y permitir el acceso al GPS.
+- Las últimas posiciones se muestran solo si tienen menos de 45 segundos. El backend elimina registros GPS de más de 24 horas durante una actualización posterior.
 
-`ID | Nombre | Tipo | Geometria | Descripcion | Horario | Detalles | Color | Visible | PuntosJSON | FechaActualizacion`
+## Hojas de Google Sheets
 
-El código ahora crea la pestaña si falta y coloca estos encabezados cuando está vacía o solo contiene una fila de encabezados incorrectos. Si encuentra registros existentes con encabezados incompatibles, se detiene para protegerlos.
+La API crea/verifica estas pestañas cuando ejecutás `prepararMapa5K`:
 
-**Importante: publicar el backend es un paso independiente de GitHub.**
+- `Mapa5K`: geometrías y detalles de los elementos cartográficos.
+- `CorredoresGPS`: última posición, alias, precisión, consentimiento activo y hora de actualización.
+- `CronometroCarrera`: estado compartido del cronómetro e instantes de inicio y fin.
 
-1. Abrí el mismo proyecto de Apps Script que utiliza el Centro de Prensa MIDES Florida.
-2. Hacé una copia de seguridad del código actual antes de integrar cambios.
-3. Integrá el archivo actualizado `apps-script/Code.gs` del repositorio `MidesFlorida/CENTRO-PRENSA-MIDES-FLORIDA`, conservando todas las funciones editoriales. Incluye las acciones `mapa5kList` y `mapa5kSave` y funciones auxiliares con prefijo `mapa5k_`.
-4. En el selector de funciones, ejecutá `prepararMapa5K` una vez y aceptá los permisos. En el registro de ejecución debe aparecer `ok: true`, la pestaña `Mapa5K` y los encabezados.
-5. Guardá el proyecto. Luego elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**. Mantené la URL actual que termina en `/exec`.
-6. Abrí el [editor del mapa](https://midesflorida.github.io/5k-INJU-MIDES-2026/editor.html), ingresá una clave editorial válida y probá guardar un punto de prueba. Confirmá que aparezca una fila nueva en `Mapa5K` y que el editor muestre confirmación de la API.
+El identificador de la planilla está definido en `apps-script/Code.gs` como `MAPA5K_SPREADSHEET_ID`. Si cambiás de planilla, cambiá ese valor solo en la API independiente de la 5K.
 
-La clave se valida contra las claves editoriales configuradas en el Apps Script compartido; no agregues claves al HTML público.
+## Activar el cambio de backend
 
-**No pegues el antiguo archivo independiente `5k-INJU-MIDES-2026/apps-script/Code.gs` encima del script compartido:** contiene sus propios `doGet`, `getSheet_` y encabezados, y podría interferir con el Centro de Prensa.
+Guardar cambios en GitHub no actualiza automáticamente la implementación de Google Apps Script. Para que funcionen el GPS y el cronómetro:
 
-## Qué protege la integración
+1. Abrí el proyecto de Apps Script independiente que corresponde a la URL actualmente configurada en `api-config.js`.
+2. Hacé una copia de seguridad del código actual y reemplazá su `Code.gs` por el contenido actualizado de `apps-script/Code.gs`. **No modifiques el proyecto del Centro de Prensa.**
+3. En Propiedades del script, verificá que `ADMIN_KEY` coincida con la clave que usás en el editor. No la guardes en GitHub.
+4. Ejecutá `prepararMapa5K` una vez y autorizá el acceso a la planilla exclusiva de la 5K. La función crea/verifica las tres pestañas indicadas arriba.
+5. En **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar**, actualizá la aplicación web existente para conservar la URL `/exec` actual. Si esa implementación o proyecto ya no está disponible, creá una nueva implementación y actualizá `api-config.js` con su URL.
 
-- Las acciones del mapa tienen nombres propios (`mapa5kList`, `mapa5kSave`) y no reemplazan las acciones editoriales existentes.
-- El mapa lee y escribe únicamente en la pestaña `Mapa5K`.
-- Si la pestaña ya existe con encabezados incompatibles, la integración se detiene para proteger sus datos.
-- No se inventa un recorrido oficial: el recorrido debe dibujarse y guardarse desde el editor.
+## Privacidad y límites del GPS
+
+Compartir la ubicación es opcional. El participante debe usar un dorsal o alias y confirmar que entiende que su posición se verá públicamente. Puede detener la transmisión en cualquier momento. El mapa deja de mostrar ubicaciones que no se actualizan durante 45 segundos y el navegador puede suspender el GPS si la página pasa a segundo plano, el teléfono bloquea el navegador o se pierde la conexión. Por tanto, el seguimiento es casi en tiempo real, no un sistema de cronometraje deportivo certificado.
+
+El cronómetro es una medición común controlada desde el editor. Iniciar una nueva medición después de finalizar reemplaza el tiempo mostrado anteriormente; no constituye un registro histórico de resultados individuales.
 
 ## Verificación
 
-El código se guardó en GitHub y se revisó que las páginas usen las acciones específicas del mapa. **La prueba final en producción queda pendiente hasta actualizar y volver a implementar el proyecto de Apps Script compartido.**
+El código y las páginas deben estar actualizados en GitHub y el backend debe volver a implementarse antes de validar la experiencia completa en producción.
