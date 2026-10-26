@@ -44,7 +44,20 @@ header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;pa
 .live-state{display:inline-flex;padding:5px 10px;border-radius:999px;background:#edf3f8;color:#274966;font-size:.8rem;font-weight:800}
 .clock-card p,.gps-card p{color:var(--muted);font-size:.82rem;margin:10px 0 0;line-height:1.45}
 .gps-card label{display:block;margin-top:10px;margin-bottom:5px;font-size:.8rem;font-weight:800;color:#29445e}
-.gps-card input{width:100%;max-width:360px;border:1px solid #c7d5e2;border-radius:9px;padding:10px 12px;font:inherit;font-size:.92rem}
+.gps-card input,.runner-alias-input{width:100%;max-width:360px;border:1px solid #c7d5e2;border-radius:9px;padding:10px 12px;font:inherit;font-size:.92rem}
+.runner-alias-input{margin-top:5px;max-width:none}
+.timer-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.timer-buttons button{min-height:44px;border-radius:9px;padding:10px 12px;font-size:.84rem;font-weight:850}
+.timer-start{background:#0756a4;color:#fff}.timer-start:hover{background:#06437f}
+.timer-stop{background:#f8fafc;color:#6d3440;border:1px solid #e0cbd0}.timer-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.timer-status{margin-top:8px;font-size:.8rem;font-weight:750;color:#34546f;overflow-wrap:anywhere}
+.timer-disclosure{font-size:.75rem!important;margin-top:8px!important}
+.results-box{border-top:1px solid #e4ebf2;margin-top:12px;padding-top:10px;font-size:.82rem}
+.results-box>strong{font-size:.8rem;color:#274966}
+.results-box ol{margin:7px 0 0;padding-left:22px}
+.results-box li{padding:4px 0;color:#344b5f}
+.results-box li>span{display:inline-block;max-width:65%;overflow-wrap:anywhere}
+.results-box li>strong{float:right;font-variant-numeric:tabular-nums;color:#073568}
 .gps-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .gps-buttons button{min-height:42px;border-radius:9px;padding:10px 14px;font-size:.84rem;font-weight:850}
 .gps-start{background:#08723d;color:white}.gps-start:hover{background:#075a31}
@@ -56,7 +69,7 @@ header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;pa
 .runner-tooltip{background:#073568;color:#fff;border:0;border-radius:6px;padding:3px 7px;font-weight:800;box-shadow:0 2px 7px #001b3c33}
 .runner-tooltip:before{border-top-color:#073568}
 @media(max-width:850px){.live-tools{grid-template-columns:1fr;padding:10px 8px 0;gap:8px}.live-card{padding:14px 15px}.gps-card input{max-width:none}.live-clock{font-size:clamp(2rem,8vw,2.7rem)}}
-@media(max-width:480px){.live-tools{padding:8px 8px 0}.live-card{border-radius:12px;padding:13px}.gps-buttons{display:grid;grid-template-columns:1fr 1fr}.gps-buttons button{padding:10px 8px;font-size:.78rem}.layout{min-height:0}.mapbox{min-height:340px}#map{height:62vh;min-height:340px;max-height:620px}.panelhead{padding:13px}.header-logos{gap:14px}}
+@media(max-width:480px){.live-tools{padding:8px 8px 0}.live-card{border-radius:12px;padding:13px}.gps-buttons,.timer-buttons{display:grid;grid-template-columns:1fr 1fr}.gps-buttons button,.timer-buttons button{padding:10px 8px;font-size:.78rem}.layout{min-height:0}.mapbox{min-height:340px}#map{height:62vh;min-height:340px;max-height:620px}.panelhead{padding:13px}.header-logos{gap:14px}}
 @media(prefers-reduced-motion:reduce){.runner-map-icon span{box-shadow:0 0 0 2px #08a45b42}}
 </style>
 </head>
@@ -81,16 +94,19 @@ header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;pa
 <section class="signup-wrap" aria-labelledby="signup-title"><div class="signup-card"><div class="signup-copy"><div class="signup-icon" aria-hidden="true">🏃</div><div><h2 id="signup-title">¡Sumate a la 5K!</h2><p>Inscribite en línea y sé parte de la iniciativa <strong>La violencia no corre más</strong>.</p><div class="signup-note">Formulario oficial de inscripción · MIDES</div></div></div><a class="signup-btn" href="https://formularios.mides.gub.uy/228484/" target="_blank" rel="noopener noreferrer">Inscribirme ahora <span aria-hidden="true">↗</span></a></div></section>
 <section class="live-tools" aria-label="Cronómetro y ubicación de corredores">
  <article class="live-card clock-card">
-  <div class="live-kicker">Cronómetro oficial</div>
-  <div class="live-clock" id="publicRaceClock" aria-live="off">00:00:00</div>
-  <div class="live-state" id="publicRaceState" role="status">Esperando la salida</div>
-  <p>El tiempo oficial se comparte con todas las personas que consultan el mapa.</p>
+  <div class="live-kicker">Mi cronómetro · tiempo individual</div>
+  <label for="runnerAlias">Dorsal o alias público</label>
+  <input class="runner-alias-input" id="runnerAlias" maxlength="32" autocomplete="off" placeholder="Ej. Dorsal 24">
+  <div class="live-clock" id="runnerTimerClock" aria-live="off">00:00:00</div>
+  <div class="live-state" id="runnerTimerState" role="status">Preparado para iniciar</div>
+  <div class="timer-buttons"><button type="button" class="timer-start" id="startRunnerTimer" disabled>▶ Iniciar mi cronómetro</button><button type="button" class="timer-stop" id="stopRunnerTimer" disabled>■ Detener y registrar tiempo</button></div>
+  <div class="timer-status" id="runnerTimerStatus" role="status">Conectando con el registro de tiempos…</div>
+  <p class="timer-disclosure">Al iniciar, tu dorsal o alias y tu tiempo final se guardarán en Google Sheets y serán visibles públicamente. No uses tu nombre completo.</p>
+  <div class="results-box"><strong>Últimos tiempos registrados</strong><ol id="runnerResults"><li>Consultando resultados…</li></ol></div>
  </article>
  <article class="live-card gps-card">
   <div class="live-kicker">Ubicación voluntaria de corredores</div>
-  <p>Podés compartir tu posición GPS para que se vea en el mapa público. Usá un dorsal o alias, no incluyas información personal. Podés dejar de compartir cuando quieras.</p>
-  <label for="runnerAlias">Dorsal o alias público</label>
-  <input id="runnerAlias" maxlength="32" autocomplete="off" placeholder="Ej. Dorsal 24">
+  <p>Si querés, también podés compartir tu posición GPS para que se vea en el mapa público. Es opcional y podés dejar de compartir cuando quieras. Se usa el mismo dorsal o alias de arriba.</p>
   <div class="gps-buttons"><button type="button" class="gps-start" id="startGps">Compartir mi ubicación</button><button type="button" class="gps-stop" id="stopGps" disabled>Dejar de compartir</button></div>
   <div class="gps-status" id="gpsShareStatus" role="status">La ubicación está desactivada.</div>
   <div class="gps-count" id="gpsMapStatus">No hay ubicaciones compartidas recientes.</div>
@@ -165,38 +181,86 @@ function load(){if(!API_URL){render([]);document.getElementById('status').textCo
  const script=document.createElement('script');script.src=API_URL+'?action=mapa5kList&callback='+cb+'&t='+Date.now();script.onerror=()=>{document.getElementById('status').textContent='No se pudo conectar con Google Sheets';delete window[cb]};document.body.appendChild(script)}
 load();setInterval(load,60000);
 
-// Cronómetro oficial sincronizado con el servidor.
-let publicRace={state:'ESPERA',startAt:null,finishAt:null};
+// Cronómetro individual: cada corredor inicia y finaliza su propio registro.
 function formatRaceTime(ms){const total=Math.max(0,Math.floor(ms/1000));const h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');}
-function drawPublicRaceClock(){
- const time=document.getElementById('publicRaceClock'),state=document.getElementById('publicRaceState');
- let elapsed=0,label='Esperando la salida';
- if(publicRace.state==='EN_CURSO'&&publicRace.startAt){elapsed=Date.now()-publicRace.startAt;label='CARRERA EN CURSO';}
- else if(publicRace.state==='FINALIZADA'&&publicRace.startAt&&publicRace.finishAt){elapsed=publicRace.finishAt-publicRace.startAt;label='CARRERA FINALIZADA';}
- time.textContent=formatRaceTime(elapsed);state.textContent=label;
- state.style.background=publicRace.state==='EN_CURSO'?'#e4f7ec':publicRace.state==='FINALIZADA'?'#edf3f8':'#fff6de';
- state.style.color=publicRace.state==='EN_CURSO'?'#17683d':publicRace.state==='FINALIZADA'?'#274966':'#805c10';
+function createRunId(){
+ try{const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');}
+ catch(_){return 'run'+Date.now().toString(36)+Math.random().toString(36).slice(2,20);}
 }
-function apiJsonp(action,data,onSuccess,onError){
- if(!API_URL){if(onError)onError(new Error('La API de la 5K todavía no está configurada.'));return;}
- const cb='mapa5kLiveCb'+Date.now()+'_'+Math.floor(Math.random()*100000);
- let script=null,done=false;
- const cleanup=()=>{if(done)return;done=true;if(script)script.remove();try{delete window[cb];}catch(_){window[cb]=undefined;}};
- window[cb]=res=>{cleanup();if(!res||res.ok!==true){if(onError)onError(new Error(res&&res.error?res.error:'Respuesta no válida de la API.'));return;}if(onSuccess)onSuccess(res);};
- script=document.createElement('script');script.async=true;
- script.onerror=()=>{cleanup();if(onError)onError(new Error('No se pudo conectar con el servidor de la 5K.'));};
- let url=API_URL+'?action='+encodeURIComponent(action)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();
- if(data)url+='&data='+encodeURIComponent(JSON.stringify(data));
- script.src=url;document.head.appendChild(script);
+let activeTimerId='';
+try{activeTimerId=sessionStorage.getItem('mides5k-active-timer-id')||'';}catch(_){}
+if(!activeTimerId){activeTimerId=createRunId();try{sessionStorage.setItem('mides5k-active-timer-id',activeTimerId);}catch(_){}}
+let runnerTimer={state:'SIN_REGISTRO',startAt:null,finishAt:null,timeMs:null},timerApiReady=false,timerBusy=false;
+function setRunnerTimerStatus(message,isError){const el=document.getElementById('runnerTimerStatus');el.textContent=message;el.style.color=isError?'#a51d2d':'#34546f';}
+function drawRunnerTimer(){
+ let elapsed=0,label='Preparado para iniciar';
+ if(runnerTimer.state==='EN_CURSO'&&runnerTimer.startAt){elapsed=Date.now()-runnerTimer.startAt;label='CRONÓMETRO EN CURSO';}
+ else if(runnerTimer.state==='FINALIZADA'&&runnerTimer.timeMs!==null){elapsed=runnerTimer.timeMs;label='TIEMPO REGISTRADO';}
+ else if(runnerTimer.state==='SIN_REGISTRO'){label='Preparado para iniciar';}
+ document.getElementById('runnerTimerClock').textContent=formatRaceTime(elapsed);
+ const state=document.getElementById('runnerTimerState');state.textContent=label;
+ state.style.background=runnerTimer.state==='EN_CURSO'?'#e4f7ec':runnerTimer.state==='FINALIZADA'?'#edf3f8':'#fff6de';
+ state.style.color=runnerTimer.state==='EN_CURSO'?'#17683d':runnerTimer.state==='FINALIZADA'?'#274966':'#805c10';
+ document.getElementById('startRunnerTimer').disabled=!timerApiReady||timerBusy||runnerTimer.state==='EN_CURSO';
+ document.getElementById('stopRunnerTimer').disabled=!timerApiReady||timerBusy||runnerTimer.state!=='EN_CURSO';
 }
-function refreshPublicRace(){
- apiJsonp('mapa5kCarreraEstado',null,res=>{
-  publicRace={state:res.state||'ESPERA',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null};
-  drawPublicRaceClock();
- },()=>{document.getElementById('publicRaceState').textContent='No se pudo sincronizar el cronómetro';});
+function acceptTimerRecord(res){
+ runnerTimer={state:res.state||'SIN_REGISTRO',startAt:Number(res.startAt)||null,finishAt:Number(res.finishAt)||null,timeMs:res.timeMs===null||res.timeMs===undefined?null:Number(res.timeMs)};
+ drawRunnerTimer();
 }
-drawPublicRaceClock();refreshPublicRace();setInterval(refreshPublicRace,15000);setInterval(drawPublicRaceClock,250);
-
+function refreshRunnerTimer(){
+ apiJsonp('mapa5kTiempoEstado',{id:activeTimerId},res=>{
+  timerApiReady=true;acceptTimerRecord(res);
+  if(runnerTimer.state==='EN_CURSO')setRunnerTimerStatus('Cronómetro iniciado. Dejá esta página abierta y detenelo al terminar.',false);
+  else if(runnerTimer.state==='FINALIZADA')setRunnerTimerStatus('Tiempo registrado correctamente en Google Sheets.',false);
+  else setRunnerTimerStatus('Ingresá tu dorsal o alias y pulsá Iniciar mi cronómetro.',false);
+ },err=>{
+  timerApiReady=false;drawRunnerTimer();
+  setRunnerTimerStatus('El servidor necesita actualizarse para registrar tiempos individuales. '+err.message,true);
+ });
+}
+function refreshRunnerResults(){
+ apiJsonp('mapa5kTiemposList',null,res=>{
+  const list=document.getElementById('runnerResults');const items=Array.isArray(res.items)?res.items:[];
+  if(!items.length){list.innerHTML='<li>Todavía no hay tiempos registrados.</li>';return;}
+  list.innerHTML=items.map(item=>'<li><span>'+esc(item.alias||'Corredor')+'</span><strong>'+formatRaceTime(Number(item.timeMs)||0)+'</strong></li>').join('');
+ },()=>{document.getElementById('runnerResults').innerHTML='<li>No se pudieron cargar los tiempos.</li>';});
+}
+function startMyTimer(){
+ const input=document.getElementById('runnerAlias'),alias=input.value.trim().slice(0,32);
+ if(!alias){input.focus();setRunnerTimerStatus('Ingresá un dorsal o alias para registrar tu tiempo.',true);return;}
+ if(!timerApiReady){setRunnerTimerStatus('El servidor no está listo para registrar tiempos individuales. Actualizá la implementación de Apps Script.',true);return;}
+ if(runnerTimer.state==='EN_CURSO')return;
+ if(runnerTimer.state==='FINALIZADA'){
+  activeTimerId=createRunId();try{sessionStorage.setItem('mides5k-active-timer-id',activeTimerId);}catch(_){}
+  runnerTimer={state:'SIN_REGISTRO',startAt:null,finishAt:null,timeMs:null};
+ }
+ if(!confirm('Tu dorsal/alias y el tiempo que registres serán visibles públicamente. El cronómetro usará la hora del servidor. ¿Confirmás iniciar?'))return;
+ timerBusy=true;drawRunnerTimer();setRunnerTimerStatus('Registrando el inicio…',false);
+ apiJsonp('mapa5kTiempoIniciar',{id:activeTimerId,runnerId:makeRunnerId(),alias},res=>{
+  timerBusy=false;timerApiReady=true;acceptTimerRecord(res);
+  setRunnerTimerStatus('¡Cronómetro iniciado! Al cruzar la meta, pulsá Detener y registrar tiempo.',false);
+ },err=>{
+  timerBusy=false;drawRunnerTimer();setRunnerTimerStatus('No se pudo iniciar el cronómetro: '+err.message,true);
+ });
+}
+function stopMyTimer(){
+ if(runnerTimer.state!=='EN_CURSO')return;
+ if(!confirm('¿Terminaste la carrera? Al confirmar se registrará tu tiempo y no se podrá modificar desde esta pantalla.'))return;
+ timerBusy=true;drawRunnerTimer();setRunnerTimerStatus('Registrando tu llegada…',false);
+ apiJsonp('mapa5kTiempoFinalizar',{id:activeTimerId},res=>{
+  timerBusy=false;timerApiReady=true;acceptTimerRecord(res);
+  setRunnerTimerStatus('¡Tiempo registrado! Gracias por participar.',false);
+  refreshRunnerResults();
+ },err=>{
+  timerBusy=false;drawRunnerTimer();setRunnerTimerStatus('No se pudo registrar el tiempo: '+err.message,true);
+ });
+}
+document.getElementById('startRunnerTimer').addEventListener('click',startMyTimer);
+document.getElementById('stopRunnerTimer').addEventListener('click',stopMyTimer);
+refreshRunnerTimer();refreshRunnerResults();
+setInterval(()=>{if(runnerTimer.state==='EN_CURSO')drawRunnerTimer();},250);
+setInterval(refreshRunnerResults,30000);
 // Seguimiento GPS expresamente voluntario: el alias y la posición se muestran en el mapa público.
 function makeRunnerId(){
  try{let id=sessionStorage.getItem('mides5k-runner-id');if(id)return id;
