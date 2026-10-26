@@ -1,0 +1,24 @@
+{
+  "name": "5K INJU–MIDES Florida 2026",
+  "short_name": "5K Florida",
+  "description": "Mapa interactivo de la 5K INJU–MIDES Florida 2026.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#073568",
+  "theme_color": "#0756a4",
+  "icons": [
+    {
+      "src": "app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "LOGO_5k_florida-2026.png",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
