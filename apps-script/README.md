@@ -35,4 +35,4 @@ El guardado de las capas es acumulativo: actualizar o agregar una capa no borra 
 - `mapa5kTiempoEstado`, `mapa5kTiemposList`, `mapa5kTiempoIniciar`, `mapa5kTiempoFinalizar`
 - `mapa5kInicializar`, `mapa5kDiagnostico`, `ping`
 
-Las acciones de control del cronómetro y el guardado de capas requieren `ADMIN_KEY`. Las personas que comparten GPS deben dar su consentimiento expreso usando el control del mapa público; el alias y la posición se hacen visibles a cualquier visitante del mapa.
+El guardado de capas y las acciones del cronómetro común antiguo requieren `ADMIN_KEY`. Los cronómetros individuales son de autoservicio para que cada corredor pueda iniciar y detener su registro; el dorsal/alias y los tiempos finalizados se muestran públicamente. Compartir GPS requiere consentimiento expreso mediante el control del mapa; el alias y la posición se hacen visibles a cualquier visitante.
