@@ -380,7 +380,7 @@ function renderLiveRunners(items){
     '<p><strong>Distancia restante estimada:</strong> '+formatDistanceMeters(progress.remainingMeters)+'</p>'+
     '<p><strong>Avance:</strong> '+progress.progressPercent+'% · recorrido '+esc(progress.routeName)+'</p>'+
     '<p><strong>Separación GPS de la ruta:</strong> '+formatDistanceMeters(progress.distanceMeters)+'</p>';
-   tooltipText+=' · '+formatDistanceMeters(progress.travelledMeters)+' recorridos';
+   tooltipText+=' · '+formatDistanceMeters(progress.travelledMeters)+' recorridos · '+formatDistanceMeters(progress.remainingMeters)+' restantes';
   }else if(progress){
    progressHtml='<p><strong>Avance no calculado:</strong> la posición está a '+formatDistanceMeters(progress.distanceMeters)+' del recorrido. Cuando el GPS se acerque a la ruta se mostrarán las distancias estimadas.</p>';
   }else{
