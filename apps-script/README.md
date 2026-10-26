@@ -1,21 +1,36 @@
-# Backend propio del mapa 5K INJU–MIDES Florida
+# API independiente del mapa 5K INJU–MIDES Florida
 
-Esta carpeta contiene el código de Google Apps Script que utiliza exclusivamente el proyecto 5K y esta planilla:
+Esta carpeta contiene el backend exclusivo del proyecto 5K y la siguiente planilla, sin compartir código ni datos con el Centro de Prensa MIDES Florida:
 
 https://docs.google.com/spreadsheets/d/1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo/edit
 
-## Activación inicial (una sola vez)
+## Actualizar la API que ya usa el sitio
 
-1. Abrí https://script.google.com/ y creá un **proyecto nuevo e independiente** para el mapa 5K. No uses el proyecto del Centro de Prensa.
-2. Reemplazá el contenido de `Code.gs` por el archivo `apps-script/Code.gs` de este repositorio y guardá.
-3. En **Configuración del proyecto → Propiedades del script**, agregá la propiedad `ADMIN_KEY` con una clave de edición que después ingresarás en el editor. No la publiques en el repositorio.
-4. En el selector de funciones, elegí `prepararMapa5K` y pulsá **Ejecutar**. Aceptá los permisos solicitados. Esto crea o verifica la pestaña `Mapa5K` y sus encabezados sin borrar registros existentes.
-5. Abrí **Implementar → Nueva implementación → Aplicación web**. Seleccioná **Ejecutar como: tú** y el acceso que permita a los usuarios de este sitio consultar el mapa (habitualmente **Cualquier persona**). Implementá y copiá la URL terminada en `/exec`.
-6. En este repositorio, abrí `api-config.js` y asigná esa URL a `window.MAPA5K_API_URL`, entre comillas. Guardá el cambio en GitHub.
-7. Abrí la página pública y el editor 5K para comprobar la lectura; desde el editor, pulsá **Verificar Google Sheets** y luego guardá una capa de prueba.
+La URL de la implementación web actual está definida en `api-config.js`. Para mantener esa URL:
 
-## Columnas de la pestaña Mapa5K
+1. Abrí [Google Apps Script](https://script.google.com/) y buscá el proyecto independiente que publicó la URL actualmente configurada en `api-config.js`.
+2. Hacé una copia de seguridad del contenido actual de ese proyecto. Confirmá que sea la API exclusiva de la 5K y no el proyecto de Centro de Prensa.
+3. Reemplazá el contenido de su archivo `Code.gs` por el archivo actualizado `apps-script/Code.gs` de este repositorio y guardá.
+4. En **Configuración del proyecto → Propiedades del script**, confirmá que exista `ADMIN_KEY` y que su valor coincida con la clave que vas a ingresar en el editor. No publiques esa clave.
+5. En el selector de funciones, ejecutá `prepararMapa5K` una vez y aceptá los permisos solicitados. Esto crea/verifica `Mapa5K`, `CorredoresGPS` y `CronometroCarrera`, protegiendo las hojas con datos cuyos encabezados no coincidan.
+6. Elegí **Implementar → Gestionar implementaciones → Editar → Nueva versión → Implementar** para actualizar la aplicación web existente sin cambiar su URL `/exec`.
+7. Abrí el editor y pulsá **Verificar Google Sheets**. Después probá el cronómetro. El GPS debe probarse desde un teléfono con ubicación autorizada y el botón de compartir activado voluntariamente.
 
-`ID`, `Nombre`, `Tipo`, `Geometria`, `Descripcion`, `Horario`, `Detalles`, `Color`, `Visible`, `PuntosJSON`, `FechaActualizacion`.
+Si no tenés acceso al proyecto que corresponde a la URL actual, creá un proyecto independiente nuevo, pegá allí este `Code.gs`, ejecutá `prepararMapa5K`, configurá `ADMIN_KEY`, implementá como aplicación web y reemplazá la URL en `api-config.js`.
 
-El guardado es acumulativo: actualiza las capas que recibe y agrega las nuevas sin vaciar el resto de la hoja. La API tiene validación de escritura y una acción de diagnóstico que verifica el ID de planilla de destino.
+## Hojas y estructura
+
+- `Mapa5K`: `ID | Nombre | Tipo | Geometria | Descripcion | Horario | Detalles | Color | Visible | PuntosJSON | FechaActualizacion`
+- `CorredoresGPS`: `ID | AliasPublico | Latitud | Longitud | PrecisionMetros | Activo | ActualizadoMs`
+- `CronometroCarrera`: `Estado | InicioMs | FinMs | ActualizadoMs`
+
+El guardado de las capas es acumulativo: actualizar o agregar una capa no borra las demás. Las ubicaciones GPS solo se exponen en la API si están activas y fueron actualizadas en los últimos 45 segundos; los registros GPS antiguos se eliminan al ocurrir una actualización posterior pasadas 24 horas.
+
+## Acciones JSONP de la API
+
+- `mapa5kList`, `mapa5kSave`
+- `mapa5kGpsList`, `mapa5kGpsActualizar`, `mapa5kGpsDetener`
+- `mapa5kCarreraEstado`, `mapa5kCarreraIniciar`, `mapa5kCarreraFinalizar`
+- `mapa5kInicializar`, `mapa5kDiagnostico`, `ping`
+
+Las acciones de control del cronómetro y el guardado de capas requieren `ADMIN_KEY`. Las personas que comparten GPS deben dar su consentimiento expreso usando el control del mapa público; el alias y la posición se hacen visibles a cualquier visitante del mapa.
