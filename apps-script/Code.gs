@@ -14,7 +14,7 @@
  */
 const MAPA5K_SPREADSHEET_ID = '1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
 const MAPA5K_SHEET_NAME = 'Mapa5K';
-const MAPA5K_API_VERSION = '2026-10-26-mapa5k-v6';
+const MAPA5K_API_VERSION = '2026-10-26-mapa5k-v7';
 const MAPA5K_HEADERS = [
   'ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles',
   'Color','Visible','PuntosJSON','FechaActualizacion'
@@ -51,6 +51,14 @@ function doGet(e) {
       const payload = JSON.parse(String(p.data || '{}'));
       mapa5kVerifyAdminKey_(payload);
       result = mapa5kCarreraControl_(action);
+    } else if (action === 'mapa5kTiempoEstado') {
+      result = mapa5kTiempoEstado_(JSON.parse(String(p.data || '{}')));
+    } else if (action === 'mapa5kTiemposList') {
+      result = {ok:true, items:mapa5kTiemposList_()};
+    } else if (action === 'mapa5kTiempoIniciar') {
+      result = mapa5kTiempoIniciar_(JSON.parse(String(p.data || '{}')));
+    } else if (action === 'mapa5kTiempoFinalizar') {
+      result = mapa5kTiempoFinalizar_(JSON.parse(String(p.data || '{}')));
     } else {
       throw new Error('Acción no reconocida: '+action);
     }
@@ -74,6 +82,8 @@ const MAPA5K_GPS_SHEET = 'CorredoresGPS';
 const MAPA5K_GPS_HEADERS = ['ID','AliasPublico','Latitud','Longitud','PrecisionMetros','Activo','ActualizadoMs'];
 const MAPA5K_RACE_SHEET = 'CronometroCarrera';
 const MAPA5K_RACE_HEADERS = ['Estado','InicioMs','FinMs','ActualizadoMs'];
+const MAPA5K_TIMES_SHEET = 'TiemposCorredores';
+const MAPA5K_TIMES_HEADERS = ['ID','CorredorID','AliasPublico','Estado','InicioMs','FinMs','TiempoMs','ActualizadoMs'];
 const MAPA5K_GPS_MAX_AGE_MS = 45000;
 const MAPA5K_GPS_RETENTION_MS = 24 * 60 * 60 * 1000;
 
@@ -113,6 +123,7 @@ function mapa5kEnsureTable_(name, headers) {
 function mapa5kEnsureAuxiliarySheets_() {
   mapa5kEnsureTable_(MAPA5K_GPS_SHEET, MAPA5K_GPS_HEADERS);
   mapa5kEnsureTable_(MAPA5K_RACE_SHEET, MAPA5K_RACE_HEADERS);
+  mapa5kEnsureTable_(MAPA5K_TIMES_SHEET, MAPA5K_TIMES_HEADERS);
 }
 
 function mapa5kGpsList_() {
@@ -201,6 +212,111 @@ function mapa5kGpsDetener_(payload) {
       }
     }
     return {ok:true, stopped:true};
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function mapa5kTimesSheet_() {
+  return mapa5kEnsureTable_(MAPA5K_TIMES_SHEET, MAPA5K_TIMES_HEADERS);
+}
+
+function mapa5kTimeToObject_(row) {
+  return {
+    id:String(row[0] || ''),
+    runnerId:String(row[1] || ''),
+    alias:String(row[2] || 'Corredor'),
+    state:String(row[3] || 'ESPERA'),
+    startAt:Number(row[4]) || null,
+    finishAt:Number(row[5]) || null,
+    timeMs:Number(row[6]) || null,
+    updatedAt:Number(row[7]) || null
+  };
+}
+
+function mapa5kFindTimeRow_(sheet, id) {
+  const last = sheet.getLastRow();
+  if (last < 2) return null;
+  const ids = sheet.getRange(2, 1, last - 1, 1).getDisplayValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === id) {
+      return {row:i + 2, values:sheet.getRange(i + 2, 1, 1, MAPA5K_TIMES_HEADERS.length).getValues()[0]};
+    }
+  }
+  return null;
+}
+
+function mapa5kValidatePublicId_(id, label) {
+  const value = String(id || '').trim();
+  if (!/^[a-zA-Z0-9_-]{12,80}$/.test(value)) {
+    throw new Error((label || 'Identificador') + ' no válido.');
+  }
+  return value;
+}
+
+function mapa5kTiempoEstado_(payload) {
+  const id = mapa5kValidatePublicId_(payload && payload.id, 'Identificador de cronómetro');
+  const sh = mapa5kTimesSheet_();
+  const found = mapa5kFindTimeRow_(sh, id);
+  if (!found) return {ok:true, state:'SIN_REGISTRO', id:id};
+  return Object.assign({ok:true}, mapa5kTimeToObject_(found.values));
+}
+
+function mapa5kTiemposList_() {
+  const sh = mapa5kTimesSheet_();
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, MAPA5K_TIMES_HEADERS.length).getValues()
+    .map(mapa5kTimeToObject_)
+    .filter(item => item.state === 'FINALIZADA' && item.finishAt && item.timeMs !== null)
+    .sort((a, b) => b.finishAt - a.finishAt)
+    .slice(0, 10)
+    .map(item => ({alias:item.alias, timeMs:item.timeMs, finishAt:item.finishAt}));
+}
+
+function mapa5kTiempoIniciar_(payload) {
+  const id = mapa5kValidatePublicId_(payload && payload.id, 'Identificador de cronómetro');
+  const runnerId = mapa5kValidatePublicId_(payload && payload.runnerId, 'Identificador del corredor');
+  const alias = String((payload && payload.alias) || '').trim().slice(0, 32);
+  if (!alias) throw new Error('Ingresá un dorsal o alias público para registrar tu tiempo.');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const sh = mapa5kTimesSheet_();
+    const existing = mapa5kFindTimeRow_(sh, id);
+    if (existing) {
+      const item = mapa5kTimeToObject_(existing.values);
+      if (item.state === 'EN_CURSO') return Object.assign({ok:true}, item);
+      throw new Error('Este identificador ya registró un tiempo. Pulsá iniciar otra vez para crear un nuevo registro.');
+    }
+    const now = Date.now();
+    const row = [id, runnerId, alias, 'EN_CURSO', now, '', '', now];
+    sh.appendRow(row);
+    SpreadsheetApp.flush();
+    return Object.assign({ok:true}, mapa5kTimeToObject_(sh.getRange(sh.getLastRow(), 1, 1, MAPA5K_TIMES_HEADERS.length).getValues()[0]));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function mapa5kTiempoFinalizar_(payload) {
+  const id = mapa5kValidatePublicId_(payload && payload.id, 'Identificador de cronómetro');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const sh = mapa5kTimesSheet_();
+    const existing = mapa5kFindTimeRow_(sh, id);
+    if (!existing) throw new Error('No se encontró el inicio de este cronómetro. Iniciá el tiempo antes de finalizarlo.');
+    const current = mapa5kTimeToObject_(existing.values);
+    if (current.state === 'FINALIZADA') return Object.assign({ok:true}, current);
+    if (current.state !== 'EN_CURSO' || !current.startAt) throw new Error('Este cronómetro no está en curso.');
+    const finishedAt = Date.now();
+    const elapsed = Math.max(0, finishedAt - current.startAt);
+    const row = [current.id, current.runnerId, current.alias, 'FINALIZADA', current.startAt, finishedAt, elapsed, finishedAt];
+    sh.getRange(existing.row, 1, 1, MAPA5K_TIMES_HEADERS.length).setValues([row]);
+    SpreadsheetApp.flush();
+    return Object.assign({ok:true}, mapa5kTimeToObject_(row));
   } finally {
     lock.releaseLock();
   }
