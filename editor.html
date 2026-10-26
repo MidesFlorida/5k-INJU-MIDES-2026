@@ -4,10 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Diseño del mapa · 5K INJU–MIDES Florida</title>
-<link rel="icon" href="app-icon.svg" type="image/svg+xml">
-<link rel="icon" href="LOGO_5k_florida-2026.png" type="image/png">
-<link rel="apple-touch-icon" href="LOGO_5k_florida-2026.png">
-<link rel="manifest" href="site.webmanifest">
+<link rel="icon" href="app-icon.svg?v=20261026" type="image/svg+xml">
+<link rel="icon" href="LOGO_5k_florida-2026.png?v=20261026" type="image/png">
+<link rel="apple-touch-icon" href="app-icon.svg?v=20261026" type="image/svg+xml">
+<link rel="apple-touch-icon" href="LOGO_5k_florida-2026.png?v=20261026" type="image/png">
+<link rel="manifest" href="site.webmanifest?v=20261026">
 <meta name="theme-color" content="#0756a4">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -94,8 +95,8 @@ const categoryDefs={
  feria:{name:'Feria social / zona',color:'#16834a'},
  otros:{name:'Otro punto',color:'#7c3aed'}
 };
-const map=L.map('map',{preferCanvas:true}).setView([-34.0958,-56.2142],15);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);
+const map=L.map('map',{preferCanvas:true,zoomSnap:0.25,zoomDelta:0.5,wheelPxPerZoomLevel:120,maxZoom:22,zoomAnimation:true,fadeAnimation:true}).setView([-34.0958,-56.2142],15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{minZoom:2,maxNativeZoom:19,maxZoom:22,keepBuffer:4,updateWhenZooming:false,updateWhenIdle:true,attribution:'© OpenStreetMap'}).addTo(map);
 map.createPane('mapFeatures');map.getPane('mapFeatures').style.zIndex=420;
 map.createPane('drawingPreview');map.getPane('drawingPreview').style.zIndex=700;
 map.createPane('directionArrows');map.getPane('directionArrows').style.zIndex=760;
@@ -226,7 +227,7 @@ function selectRecord(id,zoom){
  selectedId=o.id;category=categoryDefs[o.tipo]?o.tipo:'otros';setActiveCategory(category);setGeometry(o.geometria||'ruta');
  $('color').value=o.color||typeColor(category);$('visible').value=String(o.visible!==false);
  renderList();renderFeatures();syncButtons();
- if(zoom){const layer=featureGroup.getLayers().find(l=>String(l._recordId)===String(o.id));if(layer){try{map.fitBounds(layer.getBounds?layer.getBounds():L.latLngBounds([layer.getLatLng(),layer.getLatLng()]),{padding:[40,40],maxZoom:17});}catch(_){}}}
+ if(zoom){const layer=featureGroup.getLayers().find(l=>String(l._recordId)===String(o.id));if(layer){try{map.fitBounds(layer.getBounds?layer.getBounds():L.latLngBounds([layer.getLatLng(),layer.getLatLng()]),{padding:[40,40],maxZoom:19});}catch(_){}}}
  setStatus('Seleccionado: '+o.nombre,false);
 }
 function defaultName(){return categoryDefs[category].name;}
@@ -341,7 +342,7 @@ function startEdit(id){
  const n=minPoints(o.geometria);
  $('instructions').textContent='Arrastrá los vértices para moverlos. Tocá un vértice y usá Eliminar punto seleccionado, o pulsá Agregar punto y luego el mapa. La geometría original se conserva hasta que guardes.';
  setStatus('Editando vértices de: '+o.nombre+'. Los cambios todavía no están guardados.',false);
- try{const layer=previewGroup.getLayers()[0];if(layer&&layer.getBounds)map.fitBounds(layer.getBounds(),{padding:[40,40],maxZoom:17});}catch(_){}
+ try{const layer=previewGroup.getLayers()[0];if(layer&&layer.getBounds)map.fitBounds(layer.getBounds(),{padding:[40,40],maxZoom:19});}catch(_){}
 }
 function exitEdit(){
  if(!editingId)return;
