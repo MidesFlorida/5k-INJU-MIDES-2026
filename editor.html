@@ -176,7 +176,7 @@ function syncButtons(){
  $('cancel').disabled=!drawing;
  $('editSelected').disabled=drawing||!!editingId||!activeRecord();
  $('editInfo').disabled=drawing||!!editingId||!activeRecord();
- $('addPoint').disabled=!editingId||addingPoint;
+ $('addPoint').disabled=!editingId||addingPoint||geometryOfEditing()==='punto';
  $('deletePoint').disabled=!editingId||selectedVertex<0||editPoints.length<=minPoints(geometryOfEditing());
  $('cancelEdit').disabled=!editingId;
  $('saveEdit').disabled=!editingId||!dirty;
@@ -346,7 +346,7 @@ function chooseMapClick(e){
  if(editingId&&addingPoint){editPoints.push(p);addingPoint=false;selectedVertex=editPoints.length-1;dirty=true;replaceEditingPreview();updateVertexMarkers();syncButtons();setStatus('Punto agregado. Pulsá Guardar edición para confirmar.',false);}
 }
 map.on('click',chooseMapClick);
-document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{if(drawing||editingId)return;category=b.dataset.category;setActiveCategory(category);if(!$('color').dataset.manual)$('color').value=typeColor(category);}));
+document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{if(drawing||editingId)return;category=b.dataset.category;setActiveCategory(category);$('color').dataset.manual='';$('color').value=typeColor(category);}));
 document.querySelectorAll('[data-geometry]').forEach(b=>b.addEventListener('click',()=>{if(drawing||editingId)return;setGeometry(b.dataset.geometry);}));
 $('color').addEventListener('input',()=>{$('color').dataset.manual='true';if(drawing)renderFeatures();});
 $('visible').addEventListener('change',()=>{const o=activeRecord();if(o&&!drawing&&!editingId)setVisibility(o.id,$('visible').value==='true');});
