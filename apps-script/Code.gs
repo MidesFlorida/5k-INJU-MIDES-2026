@@ -35,6 +35,10 @@ function doGet(e) {
       result = mapa5kDiagnostic_(sh);
     } else if (action === 'mapa5kList') {
       result = {ok:true, items:mapa5kList_()};
+    } else if (action === 'mapa5kAuth') {
+      const payload = JSON.parse(String(p.data || '{}'));
+      mapa5kVerifyAdminKey_(payload);
+      result = {ok:true, authorized:true};
     } else if (action === 'mapa5kSave') {
       const payload = JSON.parse(String(p.data || '{}'));
       mapa5kVerifyAdminKey_(payload);
