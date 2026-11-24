@@ -299,12 +299,13 @@ async function loadRecords(){
  if(!API_URL){records=[];renderList();renderFeatures();syncButtons();setStatus('Falta configurar la API propia del mapa 5K en api-config.js. El editor no usará otra API compartida.',true);return;}
  setStatus('Verificando la planilla de Google Sheets…',false);
  try{
-  const diagnostic=await jsonp(API_URL+'?action=mapa5kDiagnostico','Google Sheets responde.','No se pudo verificar la planilla de Google Sheets.');
+  const authData=encodeURIComponent(JSON.stringify({key:adminKey}));
+  const diagnostic=await jsonp(API_URL+'?action=mapa5kEditorDiagnostico&data='+authData,'Google Sheets responde.','No se pudo verificar la planilla de Google Sheets.');
   if(String(diagnostic.spreadsheetId||'')!==MAPA5K_SPREADSHEET_ID){
    setStatus('La API responde, pero apunta a otra planilla. Actualizá apps-script/Code.gs y publicá una nueva versión de Apps Script. ID actual: '+String(diagnostic.spreadsheetId||'(sin ID)'),true);
    throw new Error('La API está conectada a otra planilla.');
   }
-  const data=await jsonp(API_URL+'?action=mapa5kList','Capas cargadas desde Google Sheets.','No se pudo cargar el mapa.',function(res){records=Array.isArray(res.items)?res.items.map(payloadForRecord):[];});
+  const data=await jsonp(API_URL+'?action=mapa5kEditorList&data='+authData,'Capas cargadas desde Google Sheets.','No se pudo cargar el mapa.',function(res){records=Array.isArray(res.items)?res.items.map(payloadForRecord):[];});
   renderList();renderFeatures();syncButtons();setStatus('Planilla verificada · pestaña Mapa5K · '+records.length+' capas',false);
  }catch(_){records=[];renderList();renderFeatures();syncButtons();}
 }
