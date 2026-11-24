@@ -14,7 +14,7 @@
  */
 const MAPA5K_SPREADSHEET_ID = '1I77KCptylJ6GX9KnlshDEZSRfK4BGasUOT93fXjBzTo';
 const MAPA5K_SHEET_NAME = 'Mapa5K';
-const MAPA5K_API_VERSION = '2026-10-26-mapa5k-v7';
+const MAPA5K_API_VERSION = '2026-11-24-mapa5k-v8';
 const MAPA5K_HEADERS = [
   'ID','Nombre','Tipo','Geometria','Descripcion','Horario','Detalles',
   'Color','Visible','PuntosJSON','FechaActualizacion'
