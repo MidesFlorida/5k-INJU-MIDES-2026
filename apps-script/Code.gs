@@ -29,6 +29,8 @@ function doGet(e) {
     if (action === 'ping') {
       result = {ok:true, service:'Mapa 5K INJU–MIDES Florida'};
     } else if (action === 'mapa5kInicializar') {
+      const payload = JSON.parse(String(p.data || '{}'));
+      mapa5kVerifyAdminKey_(payload);
       result = prepararMapa5K();
     } else if (action === 'mapa5kDiagnostico') {
       const sh = mapa5kSheet_();
