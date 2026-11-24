@@ -39,6 +39,14 @@ function doGet(e) {
       const payload = JSON.parse(String(p.data || '{}'));
       mapa5kVerifyAdminKey_(payload);
       result = {ok:true, authorized:true};
+    } else if (action === 'mapa5kEditorDiagnostico') {
+      const payload = JSON.parse(String(p.data || '{}'));
+      mapa5kVerifyAdminKey_(payload);
+      result = mapa5kDiagnostic_(mapa5kSheet_());
+    } else if (action === 'mapa5kEditorList') {
+      const payload = JSON.parse(String(p.data || '{}'));
+      mapa5kVerifyAdminKey_(payload);
+      result = {ok:true, items:mapa5kList_()};
     } else if (action === 'mapa5kSave') {
       const payload = JSON.parse(String(p.data || '{}'));
       mapa5kVerifyAdminKey_(payload);
