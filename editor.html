@@ -20,9 +20,28 @@
 @media(min-width:901px) and (max-width:1200px){.app{grid-template-columns:315px minmax(0,1fr)}}
 .race-notice{padding:10px 11px;background:#eef6fb;border:1px solid #d0e0ed;border-radius:9px;color:#234a69;font-size:10px;line-height:1.45;font-weight:700}
 @media(max-width:900px){.race-control{padding:9px}.race-control-buttons{gap:6px}.race-control .btn{min-height:42px}}
+
+/* Autenticación obligatoria del área de diseño */
+#design-auth-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#031c3b,#0756a4);}
+#design-auth-gate[hidden]{display:none!important}
+.auth-card{width:min(420px,100%);padding:26px;background:#fff;border-radius:16px;box-shadow:0 20px 70px #00152e66;color:#172b3b}
+.auth-card h1{font-size:21px;margin:0 0 7px;color:#073568}.auth-card p{font-size:13px;line-height:1.5;color:#657887;margin:0 0 18px}
+.auth-card label{display:block;font-size:12px;font-weight:800;margin:0 0 6px}.auth-card input{width:100%;padding:12px;border:1px solid #cbd7e0;border-radius:8px;font:inherit;margin-bottom:12px}
+.auth-card button{width:100%;min-height:44px;border:0;border-radius:8px;background:#0756a4;color:#fff;font-weight:850;cursor:pointer}
+.auth-card button:disabled{opacity:.55;cursor:wait}#auth-error{min-height:18px;margin:10px 0 0;color:#b42318;font-size:12px;font-weight:700}
 </style>
 </head>
 <body>
+<div id="design-auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+ <form class="auth-card" id="design-auth-form" autocomplete="on">
+  <h1 id="auth-title">Acceso al área de diseño</h1>
+  <p>Ingresá la clave autorizada para administrar el mapa 5K INJU–MIDES Florida. Sin validación no se habilitarán las herramientas.</p>
+  <label for="design-auth-key">Clave de acceso</label>
+  <input id="design-auth-key" type="password" name="password" autocomplete="current-password" required minlength="1" placeholder="Ingresá tu clave">
+  <button id="design-auth-submit" type="submit">Verificar e ingresar</button>
+  <div id="auth-error" role="alert" aria-live="assertive"></div>
+ </form>
+</div>
 <div class="app">
 <aside>
 <header class="sidehead"><div class="design-logos" aria-label="Logos MIDES y 5K, sin tarjetas de fondo"><img src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO%202%20TINTAS%20BLANCO%20Y%20AMARILLO.png" alt="MIDES Uruguay · logo blanco y amarillo" loading="eager"><img class="logo-5k" src="https://midesflorida.github.io/5k-INJU-MIDES-2026/LOGO_5k_florida-2026.png" alt="5K INJU–MIDES Florida 2026" loading="eager"></div><div class="kicker">Panel de diseño · MIDES Florida</div><div class="title">Mapa 5K INJU–MIDES</div><div class="subtitle">Diseñá recorridos, zonas y puntos. Seleccioná una capa para editar sus vértices o su información.</div></header>
@@ -102,11 +121,11 @@ map.createPane('drawingPreview');map.getPane('drawingPreview').style.zIndex=700;
 map.createPane('directionArrows');map.getPane('directionArrows').style.zIndex=760;
 map.createPane('vertexHandles');map.getPane('vertexHandles').style.zIndex=900;
 const featureGroup=L.featureGroup().addTo(map),previewGroup=L.layerGroup().addTo(map),vertexGroup=L.layerGroup().addTo(map);
-let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
+let records=[],selectedId=null,category='ruta',geometry='ruta',drawing=false,draftPoints=[],editingId=null,editPoints=[],editSnapshot=null,selectedVertex=-1,addingPoint=false,adminKey='',authVerified=false,modalMode='new',pendingFeature=null,dirty=false,requestCounter=0;
 const categoryOrder=['ruta','escenario','hidratacion','feria','otros'];
 function setStatus(message,isError){$('status').textContent=message;$('status').style.color=isError?'#b42318':'#657887';$('mapStatus').textContent=message;}
 function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
-function ensureAdminKey(){if(adminKey)return true;adminKey=(prompt('Clave de edición del mapa 5K:')||'').trim();if(!adminKey){setStatus('Para editar y guardar necesitás ingresar la clave de edición.',true);return false;}return true;}
+function ensureAdminKey(){if(authVerified&&adminKey)return true;setStatus('El área de diseño requiere una autenticación válida.',true);return false;}
 function activeRecord(){return records.find(r=>String(r.id)===String(selectedId))||null;}
 function minPoints(g){return g==='punto'?1:(g==='poligono'?3:2);}
 function currentPoints(){return editingId?editPoints:draftPoints;}
@@ -421,10 +440,34 @@ $('logout').onclick=()=>{if(drawing&&!confirm('Hay un dibujo en curso sin guarda
 window.addEventListener('resize',()=>setTimeout(()=>map.invalidateSize(true),100));
 window.addEventListener('orientationchange',()=>setTimeout(()=>map.invalidateSize(true),350));
 if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>setTimeout(()=>map.invalidateSize(true),100));
-adminKey=(prompt('Clave de edición del mapa 5K:')||'').trim();
-if(!adminKey){setStatus('Falta la clave de edición. Algunas operaciones requieren autorización.',true);}
-loadRecords();
-setTimeout(()=>map.invalidateSize(true),120);setTimeout(()=>map.invalidateSize(true),650);
+async function authenticateDesign(event){
+ if(event)event.preventDefault();
+ const field=$('design-auth-key'),button=$('design-auth-submit'),error=$('auth-error');
+ const key=String(field.value||'').trim();
+ error.textContent='';
+ if(!key){error.textContent='Ingresá la clave para continuar.';field.focus();return;}
+ if(!API_URL){error.textContent='No está configurado el servicio de autenticación. El editor permanece bloqueado.';return;}
+ button.disabled=true;button.textContent='Verificando…';
+ try{
+  const payload=encodeURIComponent(JSON.stringify({key:key}));
+  await jsonp(API_URL+'?action=mapa5kAuth&data='+payload,'Credenciales verificadas. Acceso autorizado.','No se pudo validar el acceso.',function(res){
+   if(res.authorized!==true)throw new Error('El servidor no confirmó la autorización.');
+   adminKey=key;authVerified=true;
+  });
+  if(!authVerified)throw new Error('El servidor no confirmó la autorización.');
+  $('design-auth-gate').hidden=true;
+  $('design-auth-form').reset();
+  await loadRecords();
+  setTimeout(()=>map.invalidateSize(true),120);setTimeout(()=>map.invalidateSize(true),650);
+ }catch(e){
+  adminKey='';authVerified=false;
+  error.textContent=/incorrecta|autoriz|credencial/i.test(e.message)?'Clave incorrecta. No se habilitó el acceso.':'No fue posible verificar la clave. El editor continúa bloqueado.';
+  field.value='';field.focus();
+ }finally{button.disabled=false;button.textContent='Verificar e ingresar';}
+}
+$('design-auth-form').addEventListener('submit',authenticateDesign);
+$('design-auth-key').focus();
+setTimeout(()=>map.invalidateSize(true),120);
 })();
 </script>
 </body>
