@@ -428,7 +428,8 @@ $('showAll').onclick=()=>setAllVisibility(true);$('hideAll').onclick=()=>setAllV
 $('initSheet').onclick=async()=>{
  if(!API_URL){setStatus('Primero publicá apps-script/Code.gs y pegá la URL /exec en api-config.js.',true);return;}
  try{
-  const result=await jsonp(API_URL+'?action=mapa5kInicializar','Pestaña Mapa5K y encabezados verificados.','No se pudo preparar Google Sheets.');
+  const initData=encodeURIComponent(JSON.stringify({key:adminKey}));
+  const result=await jsonp(API_URL+'?action=mapa5kInicializar&data='+initData,'Pestaña Mapa5K y encabezados verificados.','No se pudo preparar Google Sheets.');
   if(String(result.spreadsheetId||'')!==MAPA5K_SPREADSHEET_ID){
    setStatus('La API sigue apuntando a otra planilla. Actualizá apps-script/Code.gs y publicá una nueva versión. ID actual: '+String(result.spreadsheetId||'(sin ID)'),true);
    return;
